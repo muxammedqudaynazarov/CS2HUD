@@ -88,7 +88,7 @@ function renderTopBar(state) {
   const phase = rnd.phase || map.phase || '';
   D.phase.textContent = phaseLabel(phase);
 
-  if (map.name) radar.loadMap(map.name);
+  // radar.loadMap called in renderRadar()
 }
 
 function flagEmoji(code) {
@@ -332,10 +332,12 @@ function renderObserver(state) {
 }
 
 // ── RADAR ─────────────────────────────────────────────────────
-let radarAnimId = null;
 function renderRadar(state) {
-  if (radarAnimId) cancelAnimationFrame(radarAnimId);
-  radarAnimId = requestAnimationFrame(() => radar.render(state));
+  // Radar v3.0 has its own internal rAF loop — just push state
+  if (!radar) return;
+  const mapName = state.map?.name;
+  if (mapName) radar.loadMap(mapName);
+  radar.render(state);
 }
 
 // ── Helpers ───────────────────────────────────────────────────
