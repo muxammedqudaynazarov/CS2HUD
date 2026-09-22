@@ -1,11 +1,21 @@
 /**
- * CS2HUD — Server  (LAN-ready)
+ * CS2HUD — Server  v1.2.0
  * ──────────────────────────────────────────────────────────────────
- * Listens on 0.0.0.0 so both localhost AND network clients can reach it.
+ * Supports both LAN and remote VPS deployments.
  *
- *   Gaming PC  → sends GSI to   http://<SERVER_IP>:3000/gsi
- *   OBS        → browser source http://<SERVER_IP>:3000/hud
- *   Setup page → http://<SERVER_IP>:3000/setup  (auto-downloads GSI cfg)
+ * Environment variables:
+ *   PORT        = 3000          (HTTP port)
+ *   SERVER_HOST = 189.74.98.124 (public IP or domain — set on VPS!)
+ *   GSI_TOKEN   = cs2hud_2024   (auth token, must match cfg file)
+ *
+ * Endpoints:
+ *   POST /gsi          ← CS2 gaming PC sends data here
+ *   GET  /hud          ← OBS browser source
+ *   GET  /setup        ← Setup guide (shows correct URLs)
+ *   GET  /gsi-config   ← Downloads pre-configured .cfg file
+ *   GET  /api/state    ← Last GSI state (debug)
+ *   GET  /api/network  ← IP info (used by /setup page)
+ *   GET  /health       ← Health check (uptime, connections)
  * ──────────────────────────────────────────────────────────────────
  */
 
@@ -20,10 +30,12 @@ const app    = express();
 const server = http.createServer(app);
 const io     = new Server(server, { cors: { origin: '*' } });
 
-const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';   // listen on ALL network interfaces
+// ─── Config (from env or defaults) ──────────────────────────────
+const PORT        = parseInt(process.env.PORT        || '3000', 10);
+const SERVER_HOST = process.env.SERVER_HOST || null;   // e.g. 189.74.98.124
+const GSI_TOKEN   = process.env.GSI_TOKEN   || 'cs2hud_2024';
 
-// ─── Detect local network IP(s) ─────────────────────────────────
+// ─── IP detection ────────────────────────────────────────────────
 function getLocalIPs() {
   const nets  = os.networkInterfaces();
   const found = [];
@@ -37,14 +49,21 @@ function getLocalIPs() {
   return found;
 }
 
-// Primary IP used for GSI config generation & console hints
-function primaryIP() {
+/**
+ * Returns the IP/hostname to use in URLs and GSI configs.
+ * Priority:  SERVER_HOST env  →  first local IPv4  →  localhost
+ */
+function publicHost() {
+  if (SERVER_HOST) return SERVER_HOST;
   const list = getLocalIPs();
-  return list.length ? list[0].ip : '127.0.0.1';
+  return list.length ? list[0].ip : 'localhost';
 }
 
-// ─── Last game state ─────────────────────────────────────────────
-let lastState = {};
+// ─── State ───────────────────────────────────────────────────────
+let lastState       = {};
+let gsiPacketCount  = 0;
+let wsClientCount   = 0;
+const startedAt     = Date.now();
 
 // ─── Middleware ──────────────────────────────────────────────────
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -52,52 +71,69 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Routes ─────────────────────────────────────────────────────
 
-// Root → HUD
 app.get('/', (_, res) => res.redirect('/hud'));
 
-// GSI receiver  (called by CS2 on the gaming PC)
-app.post('/gsi', (req, res) => {
-  const state = req.body;
-  if (state && typeof state === 'object') {
-    lastState = state;
-    io.emit('gamestate', state);
-
-    if (state.round?.phase) {
-      const map   = state.map?.name || 'unknown';
-      const round = (state.map?.round ?? 0) + 1;
-      process.stdout.write(
-        `\r[GSI] ${map.padEnd(20)} R${String(round).padStart(2)}  ${state.round.phase.toUpperCase().padEnd(14)}`
-      );
-    }
-  }
-  res.sendStatus(200);
-});
-
-// Last state (debug / health check)
-app.get('/api/state', (_, res) => res.json(lastState));
-
-// Network info endpoint – used by the setup page
-app.get('/api/network', (_, res) => {
+// ── Health check ─────────────────────────────────────────────────
+app.get('/health', (_, res) => {
   res.json({
-    ips:  getLocalIPs(),
-    port: PORT,
-    primary: primaryIP(),
+    status:      'ok',
+    uptime_s:    Math.floor((Date.now() - startedAt) / 1000),
+    gsi_packets: gsiPacketCount,
+    ws_clients:  wsClientCount,
+    has_data:    Object.keys(lastState).length > 0,
   });
 });
 
-// ── Dynamic GSI config download ──────────────────────────────────
-// Gaming PC opens http://<SERVER_IP>:3000/gsi-config → downloads
-// a pre-configured .cfg file pointing back at this server's IP.
+// ── GSI receiver ─────────────────────────────────────────────────
+app.post('/gsi', (req, res) => {
+  const state = req.body;
+  if (!state || typeof state !== 'object') return res.sendStatus(400);
+
+  // Token validation (optional but recommended on public VPS)
+  const receivedToken = state.auth?.token;
+  if (receivedToken && receivedToken !== GSI_TOKEN) {
+    console.warn(`\n[GSI] ⚠️  Invalid token: "${receivedToken}" — request ignored`);
+    return res.sendStatus(403);
+  }
+
+  lastState = state;
+  gsiPacketCount++;
+  io.emit('gamestate', state);
+
+  if (state.round?.phase) {
+    const map   = (state.map?.name || 'unknown').padEnd(20);
+    const round = String((state.map?.round ?? 0) + 1).padStart(2);
+    const phase = state.round.phase.toUpperCase().padEnd(14);
+    process.stdout.write(`\r[GSI] ${map} R${round}  ${phase}  #${gsiPacketCount}`);
+  }
+
+  res.sendStatus(200);
+});
+
+// ── Debug / API ───────────────────────────────────────────────────
+app.get('/api/state', (_, res) => res.json(lastState));
+
+app.get('/api/network', (_, res) => {
+  res.json({
+    public_host: publicHost(),
+    port:        PORT,
+    local_ips:   getLocalIPs(),
+    server_host_env: SERVER_HOST || null,
+  });
+});
+
+// ── Dynamic GSI config download ───────────────────────────────────
+// Point CS2 at the correct public host automatically.
 app.get('/gsi-config', (req, res) => {
-  const serverIP = primaryIP();
-  const cfg = `"CS2HUD"
+  const host = publicHost();
+  const cfg  = `"CS2HUD"
 {
-    "uri"           "http://${serverIP}:${PORT}/gsi"
+    "uri"           "http://${host}:${PORT}/gsi"
     "timeout"       "5.0"
     "heartbeat"     "10.0"
     "auth"
     {
-        "token"     "cs2hud_2024"
+        "token"     "${GSI_TOKEN}"
     }
     "data"
     {
@@ -122,34 +158,47 @@ app.get('/gsi-config', (req, res) => {
   res.send(cfg);
 });
 
-// ─── WebSocket ──────────────────────────────────────────────────
+// ─── WebSocket ───────────────────────────────────────────────────
 io.on('connection', (socket) => {
+  wsClientCount++;
   const from = socket.handshake.address;
-  console.log(`\n[WS] Client connected    : ${socket.id}  (${from})`);
+  console.log(`\n[WS] ↑ connected    ${socket.id}  (${from})  clients: ${wsClientCount}`);
+
   if (Object.keys(lastState).length) socket.emit('gamestate', lastState);
-  socket.on('disconnect', () =>
-    console.log(`[WS] Client disconnected : ${socket.id}`));
+
+  socket.on('disconnect', () => {
+    wsClientCount = Math.max(0, wsClientCount - 1);
+    console.log(`[WS] ↓ disconnected ${socket.id}  clients: ${wsClientCount}`);
+  });
 });
 
-// ─── Start ──────────────────────────────────────────────────────
-server.listen(PORT, HOST, () => {
-  const ip   = primaryIP();
-  const all  = getLocalIPs();
-  const line = '─'.repeat(52);
+// ─── Start ───────────────────────────────────────────────────────
+server.listen(PORT, '0.0.0.0', () => {
+  const host = publicHost();
+  const line = '═'.repeat(54);
 
   console.log(`\n  ${line}`);
-  console.log(`  CS2HUD  v1.1.0  —  LAN Mode`);
+  console.log(`  CS2HUD  v1.2.0`);
   console.log(`  ${line}`);
-  console.log(`\n  🖥️  Server (this machine)`);
-  console.log(`      http://localhost:${PORT}/hud`);
-  if (all.length) {
-    all.forEach(({ iface, ip: addr }) =>
-      console.log(`      http://${addr}:${PORT}/hud     ← ${iface}`));
+  console.log(`\n  🌐  Public address`);
+  console.log(`        http://${host}:${PORT}/hud`);
+  if (SERVER_HOST) {
+    console.log(`        (SERVER_HOST env set — using this for GSI config)`);
+  } else {
+    const all = getLocalIPs();
+    if (all.length > 1) {
+      all.forEach(({ iface, ip }) =>
+        console.log(`        http://${ip}:${PORT}/hud   ← ${iface}`));
+    }
+    console.log(`\n  ⚠️   VPS'da to'g'ri IP ko'rsatish uchun:`);
+    console.log(`        SERVER_HOST=<public-ip> npm start`);
   }
-  console.log(`\n  🎮  Gaming PC  (put cfg file here)`);
-  console.log(`      CS2 sends GSI to → http://${ip}:${PORT}/gsi`);
-  console.log(`\n  📋  Setup page  (open on gaming PC)`);
-  console.log(`      http://${ip}:${PORT}/setup`);
-  console.log(`      (auto-downloads correct GSI config)`);
+  console.log(`\n  🎮  Gaming PC GSI endpoint`);
+  console.log(`        http://${host}:${PORT}/gsi`);
+  console.log(`\n  📋  Setup page (gaming PC'dan oching)`);
+  console.log(`        http://${host}:${PORT}/setup`);
+  console.log(`\n  ❤️   Health check`);
+  console.log(`        http://${host}:${PORT}/health`);
+  console.log(`\n  🔑  GSI Token: ${GSI_TOKEN}`);
   console.log(`\n  ${line}\n`);
 });
