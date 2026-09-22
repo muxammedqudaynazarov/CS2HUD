@@ -9,3 +9,4 @@ build/
 .idea/
 .vscode/
 *.swp
+# Map PNG fayllar INCLUDED (do NOT add public/maps to gitignore)
