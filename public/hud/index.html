@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920">
+  <title>CS2HUD</title>
+  <link rel="stylesheet" href="css/hud.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  WAITING SCREEN — shown before GSI data arrives            -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="waiting">
+    <div class="w-logo">CS2HUD</div>
+    <div class="w-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="w-text">Waiting for CS2 data…</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  MAIN HUD — hidden until GSI data is received              -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="hud" class="hidden">
+
+    <!-- ── TOP BAR ─────────────────────────────────────────── -->
+    <header id="topbar">
+
+      <!-- CT Team Block -->
+      <div id="team-ct" class="team-block team-ct">
+        <div class="team-name" id="ct-name">COUNTER-TERRORIST</div>
+        <div class="team-score ct-color" id="ct-score">0</div>
+      </div>
+
+      <!-- Center: Phase / Map / Round / Bomb -->
+      <div id="center-panel">
+        <div id="phase-label">LIVE</div>
+
+        <div id="map-info">
+          <span id="map-name">—</span>
+          <span id="round-display" class="round-num">R 1</span>
+        </div>
+
+        <!-- Bomb row — shown when bomb is planted / defusing -->
+        <div id="bomb-row" class="hidden">
+          <span id="bomb-icon">💣</span>
+          <span id="bomb-site-label">A</span>
+          <div id="bomb-bar-track">
+            <div id="bomb-bar-fill"></div>
+          </div>
+          <span id="bomb-secs">40s</span>
+        </div>
+      </div>
+
+      <!-- T Team Block -->
+      <div id="team-t" class="team-block team-t">
+        <div class="team-score t-color" id="t-score">0</div>
+        <div class="team-name" id="t-name">TERRORIST</div>
+      </div>
+
+    </header>
+
+    <!-- ── OBSERVER PANEL ──────────────────────────────────── -->
+    <!-- Shown when spectating a player; detailed info panel   -->
+    <section id="observer-panel" class="hidden">
+      <div id="obs-left">
+        <div id="obs-name">—</div>
+        <div id="obs-health-wrap">
+          <div id="obs-health-bar"></div>
+          <span id="obs-health-num">100</span>
+        </div>
+      </div>
+      <div id="obs-right">
+        <div id="obs-weapon-line">
+          <span id="obs-weapon">—</span>
+          <span id="obs-ammo"></span>
+        </div>
+        <div id="obs-stats-line">
+          <span id="obs-armor-icon">🛡️</span>
+          <span id="obs-armor-val">0</span>
+          <span class="obs-sep">|</span>
+          <span id="obs-money">$0</span>
+          <span class="obs-sep">|</span>
+          <div id="obs-grenades"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PLAYER PANELS ───────────────────────────────────── -->
+    <!-- Two rows at the bottom: 5 CT players + 5 T players   -->
+    <footer id="players-bottom">
+      <div id="ct-players" class="players-row players-ct"></div>
+      <div class="team-divider"></div>
+      <div id="t-players"  class="players-row players-t"></div>
+    </footer>
+
+  </div><!-- /#hud -->
+
+  <!-- Socket.io (served by our server) -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Weapon name lookup table -->
+  <script src="js/weapons.js"></script>
+  <!-- Main HUD logic -->
+  <script src="js/hud.js"></script>
+
+</body>
+</html>

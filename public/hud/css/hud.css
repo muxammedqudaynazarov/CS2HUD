@@ -1,0 +1,536 @@
+/* ═══════════════════════════════════════════════════════════════════
+   CS2HUD  —  Stylesheet
+   Designed for a 1920×1080 transparent OBS Browser Source overlay.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Reset & Base ─────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+               'Helvetica Neue', Arial, sans-serif;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ── CSS Variables ────────────────────────────────────────────────── */
+:root {
+  /* Brand colors */
+  --ct:          #5c8ff0;
+  --ct-glow:     rgba(92, 143, 240, 0.35);
+  --ct-border:   rgba(92, 143, 240, 0.45);
+  --ct-panel:    rgba(92, 143, 240, 0.08);
+
+  --t:           #e8a038;
+  --t-glow:      rgba(232, 160, 56, 0.35);
+  --t-border:    rgba(232, 160, 56, 0.45);
+  --t-panel:     rgba(232, 160, 56, 0.08);
+
+  /* Panel backgrounds */
+  --bg-main:     rgba(8, 10, 22, 0.94);
+  --bg-card:     rgba(10, 12, 26, 0.91);
+  --bg-hover:    rgba(255, 255, 255, 0.05);
+  --border:      rgba(255, 255, 255, 0.09);
+
+  /* Health colors */
+  --hp-high:     #4ade80;
+  --hp-mid:      #facc15;
+  --hp-low:      #ef4444;
+  --hp-dead:     rgba(100, 100, 110, 0.4);
+
+  /* Text */
+  --text:        #ffffff;
+  --text-dim:    rgba(255, 255, 255, 0.55);
+  --text-muted:  rgba(255, 255, 255, 0.30);
+
+  /* Bomb */
+  --bomb-active: #ef4444;
+  --bomb-defuse: #22c55e;
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  WAITING SCREEN                                                       */
+/* ─────────────────────────────────────────────────────────────────── */
+#waiting {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgba(6, 7, 16, 0.97);
+}
+
+.w-logo {
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: var(--ct);
+  text-transform: uppercase;
+  text-shadow: 0 0 40px var(--ct-glow);
+}
+
+.w-text {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* Three pulsing dots */
+.w-dots {
+  display: flex;
+  gap: 8px;
+}
+.w-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ct);
+  animation: dotPulse 1.4s infinite ease-in-out;
+}
+.w-dots span:nth-child(2) { animation-delay: 0.2s; }
+.w-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40%            { opacity: 1;   transform: scale(1.2); }
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  TOP BAR                                                              */
+/* ─────────────────────────────────────────────────────────────────── */
+#topbar {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 960px;
+  height: 72px;
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-main);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6),
+              0 1px 0 var(--border) inset;
+}
+
+/* ── Team blocks ──────────────────────────────────────────────────── */
+.team-block {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.team-block::before {           /* subtle background glow */
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.team-ct {
+  background: var(--ct-panel);
+  border-bottom: 2px solid var(--ct);
+  border-radius: 0 0 0 10px;
+  flex-direction: row;
+}
+.team-ct::before { background: var(--ct-glow); }
+
+.team-t {
+  background: var(--t-panel);
+  border-bottom: 2px solid var(--t);
+  border-radius: 0 0 10px 0;
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.team-t::before { background: var(--t-glow); }
+
+.team-name {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-score {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+  text-align: center;
+}
+
+.ct-color { color: var(--ct); text-shadow: 0 0 16px var(--ct-glow); }
+.t-color  { color: var(--t);  text-shadow: 0 0 16px var(--t-glow);  }
+
+/* ── Center Panel ─────────────────────────────────────────────────── */
+#center-panel {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-left:  1px solid var(--border);
+  border-right: 1px solid var(--border);
+  gap: 3px;
+}
+
+#phase-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+#map-info {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+#map-name {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.round-num {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ── Bomb Row ─────────────────────────────────────────────────────── */
+#bomb-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 0 4px;
+  margin-top: 3px;
+}
+
+#bomb-icon {
+  font-size: 11px;
+  animation: bombPulse 0.6s infinite alternate;
+}
+
+@keyframes bombPulse {
+  from { opacity: 0.6; }
+  to   { opacity: 1;   }
+}
+
+#bomb-site-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--bomb-active);
+  min-width: 14px;
+}
+
+#bomb-bar-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#bomb-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--bomb-active);
+  transition: width 0.25s linear, background 0.4s;
+}
+
+#bomb-secs {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bomb-active);
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  OBSERVER DETAIL PANEL                                               */
+/*  Appears above the player cards; shows full info for observed player */
+/* ─────────────────────────────────────────────────────────────────── */
+#observer-panel {
+  position: absolute;
+  bottom: 122px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 560px;
+  background: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 18px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  /* team border color set via JS */
+  border-top: 2px solid var(--ct);
+}
+
+#obs-left {
+  flex: 1;
+  min-width: 0;
+}
+
+#obs-name {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 8px;
+}
+
+#obs-health-wrap {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: visible;
+  position: relative;
+}
+
+#obs-health-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.2s ease, background-color 0.3s;
+}
+
+#obs-health-num {
+  position: absolute;
+  right: 0;
+  top: -20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+#obs-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-end;
+}
+
+#obs-weapon-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+#obs-weapon {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+#obs-ammo {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+#obs-stats-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.obs-sep {
+  color: var(--border);
+}
+
+#obs-grenades {
+  display: flex;
+  gap: 4px;
+}
+
+.gren-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 5px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  PLAYER PANELS                                                        */
+/* ─────────────────────────────────────────────────────────────────── */
+#players-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 112px;
+  display: flex;
+  align-items: stretch;
+}
+
+.players-row {
+  display: flex;
+  flex: 1;
+}
+
+.team-divider {
+  width: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+/* ── Individual Player Card ───────────────────────────────────────── */
+.player-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 10px 8px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+}
+
+/* Top border accent by side */
+.players-ct .player-card { border-top: 2px solid var(--ct-border); }
+.players-t  .player-card { border-top: 2px solid var(--t-border);  }
+
+/* Currently observed player highlight */
+.player-card.is-observed {
+  background: rgba(255, 255, 255, 0.06);
+}
+.players-ct .player-card.is-observed { border-top-color: var(--ct); }
+.players-t  .player-card.is-observed { border-top-color: var(--t);  }
+
+/* Dead player */
+.player-card.is-dead {
+  background: rgba(14, 14, 20, 0.70);
+  opacity: 0.50;
+}
+
+/* Remove last border */
+.players-ct .player-card:last-child,
+.players-t  .player-card:last-child { border-right: none; }
+
+/* ── Card header row (slot | name | HP) ──────────────────────────── */
+.pc-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.pc-slot {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 12px;
+  line-height: 1;
+}
+
+.pc-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-hp-val {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  min-width: 26px;
+  text-align: right;
+  line-height: 1;
+}
+
+/* ── HP bar ───────────────────────────────────────────────────────── */
+.pc-hp-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pc-hp-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.25s ease, background-color 0.3s;
+}
+
+/* ── Weapon & stats row ───────────────────────────────────────────── */
+.pc-weapon {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-stats {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.pc-kd {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+
+.pc-armor {
+  font-size: 9px;
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+/*  UTILITIES                                                            */
+/* ─────────────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
