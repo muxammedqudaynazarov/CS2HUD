@@ -401,3 +401,40 @@ html,body{
 
 /* ─── UTILITIES ──────────────────────────────────────────────── */
 .hidden{display:none!important}
+
+/* ── Real weapon SVG icons via CSS mask ───────────────────────
+   <span class="wpn-mask" style="--wi:url('/icons/weapon_ak47.svg')">
+   Color is set by parent's `color` CSS property.
+   ─────────────────────────────────────────────────────────────── */
+.wpn-mask{
+  display:inline-block;
+  width:100%;height:100%;
+  background-color:currentColor;
+  -webkit-mask-image:var(--wi);
+  -webkit-mask-repeat:no-repeat;
+  -webkit-mask-position:left center;
+  -webkit-mask-size:contain;
+  mask-image:var(--wi);
+  mask-repeat:no-repeat;
+  mask-position:left center;
+  mask-size:contain;
+}
+.wpn-none{background:transparent!important}
+
+/* Player card weapon icon wrapper */
+.pc-wpn-icon{
+  width:42px;height:14px;flex-shrink:0;
+  display:flex;align-items:center;
+}
+.side-ct .pc-wpn-icon{color:var(--ct-dim)}
+.side-t  .pc-wpn-icon{color:var(--t-dim)}
+.side-ct .player-card.observed .pc-wpn-icon{color:var(--ct)}
+.side-t  .player-card.observed .pc-wpn-icon{color:var(--t)}
+
+/* Observer panel weapon icon */
+.obs-wpn-icon{
+  width:56px;height:18px;flex-shrink:0;
+  display:flex;align-items:center;
+}
+#observer-panel.obs-ct .obs-wpn-icon{color:var(--ct)}
+#observer-panel.obs-t  .obs-wpn-icon{color:var(--t)}
