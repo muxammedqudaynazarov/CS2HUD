@@ -1,6 +1,7 @@
 /**
  * CS2HUD — Advanced Radar  v3.0
  * Inspired by BoltObserv (github.com/boltgolt/boltobserv, GPL-3.0)
+ * Radar images © BoltObserv / SimpleRadar contributors
  *
  * Features:
  *  - Autozoom: smooth pan + zoom to follow alive players
@@ -11,27 +12,30 @@
  *  - Continuous rAF animation loop
  */
 
-// ── Map data (Valve radar_cfg) ─────────────────────────────────
-// pos_x/pos_y = top-left world coord; scale = units / 1024-pixel
+// ── Map data — calibrated from BoltObserv meta.json5 files ────
+// Formula: x = -offset.x, y = 1024*resolution - offset.y, scale = resolution
+// Images are 2048×2048 but displayed in 1024-unit coordinate space
 const MAP_DATA = {
-  'de_mirage':   { x:-3230, y: 1250, scale:4.90 },
-  'de_dust2':    { x:-2476, y: 3239, scale:4.40 },
-  'de_inferno':  { x:-2087, y: 3870, scale:4.90 },
-  'de_nuke':     { x:-3453, y: 2887, scale:7.00 },
-  'de_overpass': { x:-4831, y: 1781, scale:5.20 },
-  'de_ancient':  { x:-2953, y: 2164, scale:5.00 },
-  'de_anubis':   { x:-2796, y: 3328, scale:5.22 },
-  'de_vertigo':  { x:-3168, y: 1762, scale:4.00 },
-  'de_cache':    { x:-2000, y: 3250, scale:4.60 },
-  'de_train':    { x:-2477, y: 2392, scale:4.70 },
+  'de_ancient':  { x:-2590, y:1842.24, scale:4.26 },
+  'de_anubis':   { x:-2830, y:3346.00, scale:5.25 },
+  'de_cache':    { x:-2020, y:3282.96, scale:5.54 },
+  'de_dust2':    { x:-2470, y:3250.60, scale:4.40 },
+  'de_inferno':  { x:-2090, y:3877.84, scale:4.91 },
+  'de_mirage':   { x:-3240, y:1730.48, scale:5.02 },
+  'de_nuke':     { x:-3290, y:1157.52, scale:6.98 },
+  'de_overpass': { x:-4830, y:1764.32, scale:5.18 },
+  'de_train':    { x:-2730, y:2493.76, scale:4.74 },
+  'de_vertigo':  { x:-3890, y:1279.04, scale:4.96 },
 };
 
-const LOWER_LEVEL = {
-  'de_nuke':    { threshold: -495,   file: 'de_nuke_lower'    },
-  'de_vertigo': { threshold:  11700, file: 'de_vertigo_lower' },
+// Split levels — when player Z crosses threshold, shift image display
+// offset_y_pct: image shifts up by this % of RADAR_SZ (shows lower area)
+const MAP_SPLITS = {
+  'de_nuke':    { threshold: -482,   above_lower: false, offset_y_pct: -46.0  },
+  'de_vertigo': { threshold: 11680,  above_lower: true,  offset_y_pct: -42.6  },
 };
 
-const IMG_SRC  = 1024;
+const IMG_SRC  = 1024;  // coordinate space (meta.json5 resolution unit)
 const RADAR_SZ = 360;
 const BASE_SC  = RADAR_SZ / IMG_SRC;  // 0.3515625
 
@@ -83,11 +87,10 @@ class Radar {
   // ── Public API ───────────────────────────────────────────────
   loadMap(name) {
     if (name === this.mapName) return;
-    this.mapName  = name;
-    this.imgUpper = this._img(`/maps/${name}.png`);
-    this.imgLower = LOWER_LEVEL[name]
-      ? this._img(`/maps/${LOWER_LEVEL[name].file}.png`)
-      : null;
+    this.mapName    = name;
+    this.imgUpper   = this._img(`/maps/${name}.png`);
+    this.imgLower   = null;       // BoltObserv uses shift, not separate image
+    this.onLowerLvl = false;
     // Reset camera
     this.camX = this.tgtX = RADAR_SZ / 2;
     this.camY = this.tgtY = RADAR_SZ / 2;
@@ -98,8 +101,28 @@ class Radar {
     if (!state) return;
     this._trackShooting(state);
     this._trackDamage(state);
+    this._detectLevel(state);
     this._updateCamera(state);
     this.lastState = state;
+  }
+
+  // ── Detect lower level (Nuke/Vertigo) ──────────────────────
+  _detectLevel(state) {
+    const split = MAP_SPLITS[this.mapName];
+    if (!split) { this.onLowerLvl = false; return; }
+
+    const allp  = state?.allplayers;
+    if (!allp)  { this.onLowerLvl = false; return; }
+
+    // Count alive players per level
+    let lower = 0, upper = 0;
+    for (const p of Object.values(allp)) {
+      if ((p.state?.health ?? 0) <= 0 || !p.position) continue;
+      const gz = +p.position.split(', ')[2];
+      const isLower = split.above_lower ? (gz < split.threshold) : (gz < split.threshold);
+      isLower ? lower++ : upper++;
+    }
+    this.onLowerLvl = lower > upper && lower > 0;
   }
 
   // ── Animation loop ───────────────────────────────────────────
@@ -223,8 +246,14 @@ class Radar {
   _drawBg() {
     const ctx = this.ctx;
     const ox  = RADAR_SZ / 2 - this.camX * this.camZoom;
-    const oy  = RADAR_SZ / 2 - this.camY * this.camZoom;
     const sz  = RADAR_SZ * this.camZoom;
+
+    // Apply split offset for maps with lower levels (Nuke, Vertigo)
+    const split  = MAP_SPLITS[this.mapName];
+    const shiftY = (this.onLowerLvl && split)
+      ? (split.offset_y_pct / 100) * RADAR_SZ * this.camZoom
+      : 0;
+    const oy = RADAR_SZ / 2 - this.camY * this.camZoom + shiftY;
 
     if (this.imgUpper?.loaded) {
       ctx.fillStyle = '#080a10';
@@ -233,6 +262,15 @@ class Radar {
       // Slight darkening overlay
       ctx.fillStyle = 'rgba(0,0,0,0.22)';
       ctx.fillRect(0, 0, RADAR_SZ, RADAR_SZ);
+
+      // Level indicator badge
+      if (this.onLowerLvl) {
+        ctx.fillStyle = 'rgba(77,136,255,0.8)';
+        ctx.font = 'bold 8px Rajdhani,sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('LOWER', 4, 4);
+      }
     } else {
       this._drawGrid(ox, oy, sz);
     }
