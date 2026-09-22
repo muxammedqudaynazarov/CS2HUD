@@ -127,6 +127,20 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
 <div id="err" class="err-msg"></div>
 <div id="ok"  class="ok-msg"></div>
 
+<!-- ── Название турнира ── -->
+<div class="section">
+  <div class="sec-t">Название турнира</div>
+  <div style="display:flex;gap:8px">
+    <input id="tname" type="text" placeholder="Введите название турнира..."
+           style="flex:1" oninput="updateTname(this.value)"
+           value="TOURNAMENT NAME">
+    <button class="btn btn-ct" onclick="saveTname()">Сохранить</button>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin-top:6px">
+    Отображается в верхней полосе HUD
+  </div>
+</div>
+
 <!-- ── Формат серии ── -->
 <div class="section">
   <div class="sec-t">Формат серии</div>
@@ -232,6 +246,34 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
+// ── Tournament name ───────────────────────────────────────
+let tname = 'TOURNAMENT NAME';
+
+function updateTname(v) { tname = v; }
+
+async function saveTname() {
+  const r = await fetch('/api/tournament', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ name: tname })
+  });
+  if (r.ok) toast('✓ Название сохранено');
+  else      toast('Ошибка', true);
+}
+
+// Init tournament name
+fetch('/api/tournament').then(r=>r.json()).then(d => {
+  tname = d.name || 'TOURNAMENT NAME';
+  const el = document.getElementById('tname');
+  if (el) el.value = tname;
+}).catch(()=>{});
+
+// Also listen for tournament updates
+io2.on('tournament', d => {
+  const el = document.getElementById('tname');
+  if (el && d.name) { el.value = d.name; tname = d.name; }
+});
+
 // ── Constants ──────────────────────────────────────────────
 const FORMAT = {
   BO1: { maps:1, wins:1, info:'1 карта · победа с первой карты' },

@@ -39,6 +39,7 @@ let wsClientCount  = 0;
 const startedAt    = Date.now();
 
 // ─── Series state (BO1/BO3/BO5) ─────────────────────────────────
+let tournamentName = 'TOURNAMENT NAME';
 let seriesState = {
   format: 'BO3',
   team1: { name: 'Команда CT', logo: null },
@@ -64,6 +65,14 @@ app.get('/api/state',   (_, res) => res.json(lastState));
 app.get('/api/network', (_, res) => res.json({
   public_host: publicHost(), port: PORT, local_ips: getLocalIPs(),
 }));
+
+// ─── Tournament Name API ─────────────────────────────────────────
+app.get('/api/tournament', (_, res) => res.json({ name: tournamentName }));
+app.post('/api/tournament', (req, res) => {
+  tournamentName = req.body.name || 'TOURNAMENT NAME';
+  io.emit('tournament', { name: tournamentName });
+  res.json({ ok: true, name: tournamentName });
+});
 
 // ─── Series API ──────────────────────────────────────────────────
 app.get('/api/series', (_, res) => res.json(seriesState));
@@ -124,6 +133,7 @@ io.on('connection', socket => {
   wsClientCount++;
   console.log(`\n[WS] + ${socket.id}  (clients: ${wsClientCount})`);
   if (Object.keys(lastState).length)  socket.emit('gamestate', lastState);
+  socket.emit('tournament', { name: tournamentName });
   if (seriesState.active)             socket.emit('series',    seriesState);
   socket.on('disconnect', () => { wsClientCount = Math.max(0, wsClientCount - 1); });
 });

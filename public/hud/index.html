@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920">
-<title>CS2HUD v2.0</title>
+<title>CS2HUD v3.0</title>
 <link rel="stylesheet" href="css/hud.css">
 </head>
 <body>
@@ -15,113 +15,105 @@
   <div class="w-sub">Waiting for CS2...</div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     MAIN HUD
-══════════════════════════════════════════════════════ -->
+<!-- ════════════════ MAIN HUD ════════════════ -->
 <div id="hud" class="hidden">
 
-  <!-- ── LEFT — CT PLAYERS ── -->
-  <aside class="side-panel side-ct" id="side-ct">
-    <div class="side-header" id="ct-side-name">COUNTER-TERRORIST</div>
-    <div class="players-stack" id="ct-players"></div>
-  </aside>
+  <!-- ── TOP SECTION ── -->
+  <div id="top-section">
 
-  <!-- ── CENTER ── -->
-  <main id="center">
+    <!-- Tournament banner -->
+    <div id="tournament-banner">
+      <span id="tournament-name">TOURNAMENT NAME</span>
+    </div>
 
-    <!-- Top Bar -->
-    <div id="topbar">
-      <div class="tb-team tb-ct">
-        <span class="tb-flag" id="ct-flag"></span>
-        <span class="tb-name" id="ct-name">TEAM CT</span>
-        <span class="tb-score" id="ct-score">0</span>
+    <!-- Scorebar -->
+    <div id="scorebar">
+      <!-- CT -->
+      <div class="sb-team sb-ct">
+        <span class="sb-name" id="ct-name">TEAM CT</span>
+        <span class="sb-score" id="ct-score">0</span>
       </div>
-      <div class="tb-center">
-        <span class="tb-phase" id="phase-label">LIVE</span>
-        <div class="tb-maprow">
-          <span class="tb-mapname" id="map-name">—</span>
-          <span class="tb-round"  id="round-info">R1</span>
-        </div>
+
+      <!-- Center -->
+      <div id="sb-center">
+        <div id="timer-display">LIVE</div>
+        <div id="round-label">Round 1/24</div>
       </div>
-      <div class="tb-team tb-t">
-        <span class="tb-score" id="t-score">0</span>
-        <span class="tb-name"  id="t-name">TEAM T</span>
-        <span class="tb-flag"  id="t-flag"></span>
+
+      <!-- T -->
+      <div class="sb-team sb-t">
+        <span class="sb-score" id="t-score">0</span>
+        <span class="sb-name" id="t-name">TEAM T</span>
       </div>
     </div>
 
-    <!-- Series maps bar -->
-    <div id="series-bar" class="hidden"></div>
+    <!-- Alive badge (drops below center) -->
+    <div id="alive-badge">
+      <span class="alive-ct" id="alive-ct">0</span>
+      <span class="alive-vs">vs</span>
+      <span class="alive-t" id="alive-t">0</span>
+    </div>
 
-    <!-- Round wins history -->
-    <div id="round-wins"></div>
+  </div><!-- /#top-section -->
 
-    <!-- Content area: Radar + panels -->
-    <div id="content-area">
-      <!-- Radar -->
-      <div id="radar-wrap">
-        <canvas id="radar-canvas"></canvas>
-        <div class="radar-overlay"></div>
+  <!-- ── BOMB PANEL (replaces timer when planted) ── -->
+  <div id="bomb-panel" class="hidden">
+    <div class="bomb-inner">
+      <span id="bomb-icon-el">💣</span>
+      <div class="bomb-info">
+        <div class="bomb-state-txt" id="bomb-state-txt">BOMB PLANTED</div>
+        <div class="bomb-site-txt" id="bomb-site-txt">SITE A</div>
       </div>
+      <div class="bomb-bar-wrap">
+        <div class="bomb-bar-fill" id="bomb-bar-fill" style="width:100%"></div>
+      </div>
+      <span class="bomb-secs" id="bomb-secs">40.0</span>
+    </div>
+  </div>
 
-      <!-- Bomb panel -->
-      <div id="bomb-panel" class="hidden">
-        <div class="bomb-header">
-          <div class="bomb-icon-wrap planted" id="bomb-icon-wrap">💣</div>
-          <div class="bomb-info">
-            <div class="bomb-state planted" id="bomb-state">BOMB PLANTED</div>
-            <div class="bomb-site" id="bomb-site">SITE A</div>
+  <!-- ── BOTTOM PANELS ── -->
+  <div id="bottom-panels">
+
+    <!-- CT Players -->
+    <div id="ct-players" class="player-panel panel-ct"></div>
+
+    <!-- Observer panel -->
+    <div id="observer-panel" class="hidden">
+      <div class="obs-left">
+        <div class="obs-name obs-ct" id="obs-name">—</div>
+        <div class="obs-hp-row">
+          <div class="obs-hpbar-wrap">
+            <div class="obs-hpbar" id="obs-hpbar"></div>
           </div>
-          <div class="bomb-time planted" id="bomb-time">40.0s</div>
+          <span class="obs-hpval" id="obs-hpval">100</span>
         </div>
-        <div class="bomb-bar-track">
-          <div class="bomb-bar-fill planted" id="bomb-bar" style="width:100%"></div>
+        <div class="obs-wpn-row">
+          <div class="obs-wpn-icon" id="obs-wpn-icon"></div>
+          <span class="obs-wpn-name" id="obs-wpn-name">—</span>
+          <span class="obs-wpn-ammo" id="obs-wpn-ammo"></span>
         </div>
       </div>
-
-      <!-- Observer panel -->
-      <div id="observer-panel" class="hidden obs-ct">
-        <div class="obs-left">
-          <div class="obs-name" id="obs-name">Player</div>
-          <div class="obs-hprow">
-            <div class="obs-hpbar-wrap">
-              <div class="obs-hpbar" id="obs-hpbar" style="width:100%;background:var(--hp-h)"></div>
-            </div>
-            <span class="obs-hpval" id="obs-hpval">100</span>
-          </div>
-          <div class="obs-wpnrow">
-            <div class="obs-wpn-icon" id="obs-wpn-icon"></div>
-            <span class="obs-wpn-name" id="obs-wpn-name">—</span>
-            <span class="obs-ammo" id="obs-ammo"></span>
-          </div>
-        </div>
-        <div class="obs-right">
-          <div class="obs-nades" id="obs-nades"></div>
-          <div class="obs-statsrow">
-            <span class="obs-armor" id="obs-armor"></span>
-            <span class="obs-kit hidden" id="obs-kit">🔧 KIT</span>
-            <span class="obs-money" id="obs-money">$0</span>
-          </div>
+      <div class="obs-right">
+        <div class="obs-nades" id="obs-nades"></div>
+        <div class="obs-stats-row">
+          <span class="obs-armor-val" id="obs-armor-val"></span>
+          <span class="obs-money-val" id="obs-money-val">$0</span>
         </div>
       </div>
     </div>
 
-  </main>
+    <!-- T Players -->
+    <div id="t-players" class="player-panel panel-t"></div>
 
-  <!-- ── RIGHT — T PLAYERS ── -->
-  <aside class="side-panel side-t" id="side-t">
-    <div class="side-header" id="t-side-name">TERRORIST</div>
-    <div class="players-stack" id="t-players"></div>
-  </aside>
+  </div>
 
-</div>
+  <!-- Flash effects -->
+  <div id="flash-container"></div>
 
-<!-- Flash effects container -->
-<div id="flash-container"></div>
+</div><!-- /#hud -->
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="js/weapons.js"></script>
-<script src="js/radar.js"></script>
 <script src="js/hud.js"></script>
 </body>
 </html>
