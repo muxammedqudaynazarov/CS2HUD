@@ -1,201 +1,503 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CS2HUD Control Panel</title>
+<title>CS2HUD — Панель управления</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{min-height:100vh;background:#06071a;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
-:root{--ct:#4d88ff;--t:#ff4444;--g:#4ade80;--y:#fbbf24;--panel:rgba(10,12,28,.98);--border:rgba(255,255,255,.09);--dim:rgba(255,255,255,.55);--muted:rgba(255,255,255,.30)}
-.page{max-width:900px;margin:0 auto;padding:32px 20px 80px}
-.hdr{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:28px}
-.logo{font-size:22px;font-weight:700;letter-spacing:3px;color:var(--ct)}
-.badge{font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 8px;background:rgba(77,136,255,.15);border:1px solid rgba(77,136,255,.3);color:var(--ct);border-radius:3px}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
-.dot.ok{background:var(--g);box-shadow:0 0 6px var(--g)}.dot.no{background:var(--t)}
-.section{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px}
-.sec-t{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-.fmt-row{display:flex;gap:8px}
-.fmt-btn{flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--dim);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
-.fmt-btn.active{background:rgba(77,136,255,.18);border-color:var(--ct);color:var(--ct)}
-.fmt-btn:hover:not(.active){background:rgba(255,255,255,.05)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.col-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+html,body{min-height:100vh;background:#05060f;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
+:root{
+  --ct:#4d88ff;--t:#ff4444;--g:#4ade80;--y:#fbbf24;--r:#ef4444;
+  --panel:rgba(10,12,28,.98);--panel2:rgba(14,17,36,.97);
+  --border:rgba(255,255,255,.09);--dim:rgba(255,255,255,.55);--muted:rgba(255,255,255,.28);
+}
+.page{max-width:880px;margin:0 auto;padding:28px 20px 80px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.logo{font-size:20px;font-weight:700;letter-spacing:3px;color:var(--ct)}
+.hdr-right{display:flex;align-items:center;gap:12px}
+.badge{font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 8px;background:rgba(77,136,255,.12);border:1px solid rgba(77,136,255,.28);color:var(--ct);border-radius:3px}
+.conn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot.ok{background:var(--g);box-shadow:0 0 6px var(--g)}.dot.no{background:var(--r)}
+
+/* Sections */
+.section{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:12px}
+.sec-t{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.sec-t span{font-size:11px;letter-spacing:1px;color:var(--dim);text-transform:none}
+
+/* Format */
+.fmt-row{display:flex;gap:8px;margin-bottom:10px}
+.fmt-btn{flex:1;padding:11px;border:1px solid var(--border);border-radius:7px;background:rgba(255,255,255,.04);color:var(--dim);font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.fmt-btn.active{background:rgba(77,136,255,.16);border-color:var(--ct);color:var(--ct)}
+.fmt-btn:hover:not(.active){background:rgba(255,255,255,.07);color:#fff}
+.fmt-info{font-size:12px;color:var(--dim);text-align:center;padding:6px 0 0;letter-spacing:.5px}
+
+/* Teams */
+.teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.team-col{display:flex;flex-direction:column;gap:8px}
+.col-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
 .col-label.ct{color:var(--ct)}.col-label.t{color:var(--t)}
-input[type=text],input[type=number]{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;margin-bottom:6px;transition:border .2s}
-input:focus{border-color:rgba(255,255,255,.25)}
-.score-row{display:flex;align-items:center;gap:16px;margin-top:10px}
-.sc{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
-.sn{font-size:52px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
-.sc:first-child .sn{color:var(--ct)}.sc:last-child .sn{color:var(--t)}
-.sep{font-size:28px;color:var(--muted)}
-.sc-btns{display:flex;gap:6px}
-.btn{padding:8px 18px;border-radius:6px;border:1px solid;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px}
-.btn-ct{background:rgba(77,136,255,.15);border-color:rgba(77,136,255,.4);color:var(--ct)}.btn-ct:hover{background:rgba(77,136,255,.28)}
-.btn-t{background:rgba(255,68,68,.15);border-color:rgba(255,68,68,.4);color:var(--t)}.btn-t:hover{background:rgba(255,68,68,.28)}
-.btn-g{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:var(--g)}.btn-g:hover{background:rgba(74,222,128,.28)}
-.btn-grey{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:var(--dim)}.btn-grey:hover{background:rgba(255,255,255,.14)}
-table{width:100%;border-collapse:collapse}
-th{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)}
-td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
-.map-add{display:flex;gap:8px;margin-top:10px}
-.map-add input{flex:1;margin:0}
-.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.live{background:rgba(5,6,14,.98);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--dim);margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.8}
-.toast{position:fixed;bottom:20px;right:20px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:var(--g);border-radius:6px;padding:10px 18px;font-size:13px;font-weight:700;z-index:999;animation:tIn .3s ease,tOut .3s ease 1.7s forwards}
-@keyframes tIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+input[type=text]{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:9px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:14px;outline:none;transition:border .2s}
+input[type=text]:focus{border-color:rgba(255,255,255,.25)}
+
+/* Logo upload */
+.logo-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;padding:8px 10px}
+.logo-preview-box{width:44px;height:44px;border-radius:5px;background:rgba(255,255,255,.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.logo-preview-box img{width:100%;height:100%;object-fit:contain}
+.logo-placeholder-txt{font-size:10px;color:var(--muted);text-align:center;line-height:1.3}
+.logo-controls{display:flex;flex-direction:column;gap:5px;flex:1}
+.logo-label{font-size:11px;color:var(--muted);margin-bottom:2px;letter-spacing:.5px}
+.logo-btns{display:flex;gap:6px}
+
+/* Map slots */
+.maps-slots{display:flex;flex-direction:column;gap:8px}
+.map-slot{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:7px;padding:10px 12px}
+.map-slot.slot-empty .map-select{border-color:rgba(255,255,255,.06)}
+.map-slot.slot-filled{border-color:rgba(255,255,255,.1)}
+.map-slot.slot-decided-ct{border-left:3px solid var(--ct)}
+.map-slot.slot-decided-t {border-left:3px solid var(--t)}
+.slot-num{font-size:11px;font-weight:700;color:var(--muted);min-width:52px;flex-shrink:0;letter-spacing:.5px}
+.map-select{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;outline:none;cursor:pointer;transition:border .2s}
+.map-select:focus{border-color:rgba(255,255,255,.25)}
+.map-select option{background:#0d0f20;color:#fff}
+.winner-btns{display:flex;gap:6px;flex-shrink:0}
+
+/* Score display */
+.score-display{display:flex;align-items:center;justify-content:center;gap:20px;padding:10px 0}
+.sd-team{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.sd-name{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--dim)}
+.sd-score{font-size:56px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.sd-score.ct{color:var(--ct);text-shadow:0 0 20px rgba(77,136,255,.4)}
+.sd-score.t {color:var(--t); text-shadow:0 0 20px rgba(255,68,68,.4)}
+.sd-sep{font-size:32px;color:var(--muted);font-weight:300}
+.sd-result{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);text-align:center;margin-top:8px}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:6px;border:1px solid;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px;display:inline-flex;align-items:center;gap:5px}
+.btn-ct {background:rgba(77,136,255,.13);border-color:rgba(77,136,255,.35);color:var(--ct)}.btn-ct:hover{background:rgba(77,136,255,.24)}
+.btn-t  {background:rgba(255,68,68,.13); border-color:rgba(255,68,68,.35); color:var(--t)}.btn-t:hover{background:rgba(255,68,68,.24)}
+.btn-g  {background:rgba(74,222,128,.13);border-color:rgba(74,222,128,.35);color:var(--g)}.btn-g:hover{background:rgba(74,222,128,.24)}
+.btn-grey{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:var(--dim)}.btn-grey:hover{background:rgba(255,255,255,.13);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn.active-winner{font-weight:800}
+.btn-ct.active-winner{background:rgba(77,136,255,.3);border-color:var(--ct);color:#fff}
+.btn-t.active-winner {background:rgba(255,68,68,.3); border-color:var(--t); color:#fff}
+
+/* Actions */
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+/* Live card */
+.live{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:12px;color:var(--dim);line-height:1.9;font-variant-numeric:tabular-nums}
+.live b{color:#fff}
+
+/* Error / info */
+.err-msg{display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:9px 14px;font-size:13px;color:#fca5a5;margin-bottom:10px}
+.err-msg.show{display:block}
+.ok-msg{display:none;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:6px;padding:9px 14px;font-size:13px;color:#86efac;margin-bottom:10px}
+.ok-msg.show{display:block}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;right:22px;z-index:999;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:var(--g);border-radius:7px;padding:11px 20px;font-size:13px;font-weight:700;animation:tIn .3s ease,tOut .3s 1.8s ease forwards}
+.toast.err{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.35);color:#fca5a5}
+@keyframes tIn {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes tOut{from{opacity:1}to{opacity:0}}
+
+.hidden{display:none!important}
+hr{border:none;border-top:1px solid var(--border);margin:14px 0}
 </style>
 </head>
 <body>
 <div class="page">
+
 <div class="hdr">
   <div class="logo">CS2HUD</div>
-  <div style="display:flex;align-items:center;gap:14px">
-    <span><span class="dot no" id="cd"></span><span id="ct" style="font-size:12px;color:var(--muted)">Ulanmoqda...</span></span>
-    <div class="badge">CONTROL PANEL</div>
+  <div class="hdr-right">
+    <div class="conn"><span class="dot no" id="cd"></span><span id="cst">Подключение...</span></div>
+    <div class="badge">ПАНЕЛЬ УПРАВЛЕНИЯ</div>
   </div>
 </div>
 
+<div id="err" class="err-msg"></div>
+<div id="ok"  class="ok-msg"></div>
+
+<!-- ── Формат серии ── -->
 <div class="section">
-  <div class="sec-t">Series format</div>
-  <div class="fmt-row" id="fr">
-    <button class="fmt-btn" onclick="sf('BO1')">BO1</button>
-    <button class="fmt-btn active" onclick="sf('BO3')">BO3</button>
-    <button class="fmt-btn" onclick="sf('BO5')">BO5</button>
+  <div class="sec-t">Формат серии</div>
+  <div class="fmt-row">
+    <button class="fmt-btn" onclick="setFmt('BO1')">BO1</button>
+    <button class="fmt-btn active" onclick="setFmt('BO3')">BO3</button>
+    <button class="fmt-btn" onclick="setFmt('BO5')">BO5</button>
   </div>
+  <div class="fmt-info" id="fi">3 карты в вето · победа до 2 карт</div>
 </div>
 
+<!-- ── Команды ── -->
 <div class="section">
-  <div class="sec-t">Jamoalar</div>
-  <div class="grid2">
-    <div>
-      <div class="col-label ct">CT Jamoasi</div>
-      <input id="cn" type="text" placeholder="Jamoa nomi" value="Team CT">
-      <input id="cs" type="text" placeholder="Qisqa (CT)" value="CT">
-      <input id="cc" type="text" placeholder="Davlat (uz)" maxlength="2">
-    </div>
-    <div>
-      <div class="col-label t">T Jamoasi</div>
-      <input id="tn" type="text" placeholder="Jamoa nomi" value="Team T">
-      <input id="ts" type="text" placeholder="Qisqa (T)" value="T">
-      <input id="tc" type="text" placeholder="Davlat (ru)" maxlength="2">
-    </div>
-  </div>
-</div>
+  <div class="sec-t">Команды</div>
+  <div class="teams-grid">
 
-<div class="section">
-  <div class="sec-t">Seriya hisobi</div>
-  <div class="score-row">
-    <div class="sc">
-      <span id="cnl" style="font-size:13px;color:var(--ct);font-weight:700">CT Jamoasi</span>
-      <span class="sn" id="csc">0</span>
-      <div class="sc-btns">
-        <button class="btn btn-ct" onclick="aw('team1')">+ G'alaba</button>
-        <button class="btn btn-grey" onclick="sw('team1')">−</button>
+    <!-- CT -->
+    <div class="team-col">
+      <div class="col-label ct">Команда CT</div>
+      <input id="ct-name" type="text" placeholder="Название команды" oninput="S.team1.name=this.value;updateScore()">
+      <div class="logo-row">
+        <div class="logo-preview-box" id="ct-logo-box">
+          <img id="ct-logo-img" class="hidden">
+          <div class="logo-placeholder-txt" id="ct-logo-ph">Нет<br>логотипа</div>
+        </div>
+        <div class="logo-controls">
+          <div class="logo-label">Логотип команды (PNG)</div>
+          <div class="logo-btns">
+            <label class="btn btn-ct btn-sm" style="cursor:pointer">
+              📁 Загрузить
+              <input type="file" accept=".png" style="display:none" onchange="uploadLogo('team1',this)">
+            </label>
+            <button class="btn btn-grey btn-sm hidden" id="ct-logo-clr" onclick="clearLogo('team1')">✕</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="sep">:</div>
-    <div class="sc">
-      <span id="tnl" style="font-size:13px;color:var(--t);font-weight:700">T Jamoasi</span>
-      <span class="sn" id="tsc">0</span>
-      <div class="sc-btns">
-        <button class="btn btn-grey" onclick="sw('team2')">−</button>
-        <button class="btn btn-t" onclick="aw('team2')">+ G'alaba</button>
+
+    <!-- T -->
+    <div class="team-col">
+      <div class="col-label t">Команда T</div>
+      <input id="t-name" type="text" placeholder="Название команды" oninput="S.team2.name=this.value;updateScore()">
+      <div class="logo-row">
+        <div class="logo-preview-box" id="t-logo-box">
+          <img id="t-logo-img" class="hidden">
+          <div class="logo-placeholder-txt" id="t-logo-ph">Нет<br>логотипа</div>
+        </div>
+        <div class="logo-controls">
+          <div class="logo-label">Логотип команды (PNG)</div>
+          <div class="logo-btns">
+            <label class="btn btn-t btn-sm" style="cursor:pointer">
+              📁 Загрузить
+              <input type="file" accept=".png" style="display:none" onchange="uploadLogo('team2',this)">
+            </label>
+            <button class="btn btn-grey btn-sm hidden" id="t-logo-clr" onclick="clearLogo('team2')">✕</button>
+          </div>
+        </div>
       </div>
     </div>
+
   </div>
 </div>
 
+<!-- ── Карты вето ── -->
 <div class="section">
-  <div class="sec-t">Xaritalar (Veto)</div>
-  <table><thead><tr><th>#</th><th>Xarita</th><th>CT</th><th>T</th><th>G'olib</th><th></th></tr></thead>
-  <tbody id="mb"></tbody></table>
-  <div class="map-add">
-    <input type="text" id="nm" placeholder="de_mirage">
-    <button class="btn btn-ct" onclick="am()">+ Qo'shish</button>
+  <div class="sec-t">Карты вето <span id="map-count-info"></span></div>
+  <div class="maps-slots" id="maps-slots"></div>
+</div>
+
+<!-- ── Итог серии ── -->
+<div class="section">
+  <div class="sec-t">Итог серии (автоматически)</div>
+  <div class="score-display">
+    <div class="sd-team">
+      <div class="sd-name" id="sd-ct">CT</div>
+      <div class="sd-score ct" id="sd-ct-score">0</div>
+    </div>
+    <div class="sd-sep">:</div>
+    <div class="sd-team">
+      <div class="sd-score t" id="sd-t-score">0</div>
+      <div class="sd-name" id="sd-t">T</div>
+    </div>
   </div>
+  <div class="sd-result" id="sd-result"></div>
 </div>
 
+<!-- ── Текущее состояние ── -->
 <div class="section">
-  <div class="sec-t">Joriy o'yin holati (GSI)</div>
-  <div class="live" id="lv">Ma'lumot kutilmoqda...</div>
+  <div class="sec-t">Текущее состояние CS2</div>
+  <div class="live" id="lv">Ожидание данных GSI...</div>
 </div>
 
+<!-- ── Действия ── -->
 <div class="acts">
-  <button class="btn btn-g"    onclick="save()">💾 Saqlash</button>
-  <button class="btn btn-grey" onclick="tog()"><span id="al">▶ Seriyani yoqish</span></button>
-  <button class="btn btn-grey" onclick="rst()">🔄 Reset</button>
-  <a href="/hud"    target="_blank" class="btn btn-grey">📺 HUD</a>
-  <a href="/setup"  target="_blank" class="btn btn-grey">⚙ Setup</a>
+  <button class="btn btn-g"    onclick="save()">💾 Сохранить и отправить</button>
+  <button class="btn btn-grey" onclick="toggle()"><span id="act-lbl">▶ Активировать серию</span></button>
+  <button class="btn btn-grey" onclick="doReset()">🔄 Сброс</button>
+  <a href="/hud"   target="_blank" class="btn btn-grey">📺 HUD</a>
+  <a href="/setup" target="_blank" class="btn btn-grey">⚙ Настройка</a>
 </div>
-</div>
+
+</div><!-- /.page -->
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const io2=io({transports:["websocket"]});
-const g=id=>document.getElementById(id);
-let S={format:"BO3",active:false,team1:{name:"Team CT",shortName:"CT",score:0,country:""},team2:{name:"Team T",shortName:"T",score:0,country:""},maps:[]};
+// ── Constants ──────────────────────────────────────────────
+const FORMAT = {
+  BO1: { maps:1, wins:1, info:'1 карта · победа с первой карты' },
+  BO3: { maps:3, wins:2, info:'3 карты в вето · победа до 2 карт' },
+  BO5: { maps:5, wins:3, info:'5 карт в вето · победа до 3 карт' },
+};
 
-io2.on("connect",()=>{g("cd").className="dot ok";g("ct").textContent="Ulangan"});
-io2.on("disconnect",()=>{g("cd").className="dot no";g("ct").textContent="Uzildi"});
-io2.on("series",s=>{S=s;ui()});
-io2.on("gamestate",gs=>liveUpdate(gs));
+const MAP_OPTS = [
+  {v:'de_mirage',  l:'Mirage'},
+  {v:'de_nuke',    l:'Nuke'},
+  {v:'de_anubis',  l:'Anubis'},
+  {v:'de_ancient', l:'Ancient'},
+  {v:'de_cache',   l:'Cache'},
+  {v:'de_inferno', l:'Inferno'},
+  {v:'de_dust2',   l:'Dust 2'},
+  {v:'de_overpass',l:'Overpass'},
+  {v:'de_train',   l:'Train'},
+  {v:'de_vertigo', l:'Vertigo'},
+];
 
-function ui(){
-  for(const b of g("fr").querySelectorAll(".fmt-btn"))b.classList.toggle("active",b.textContent===S.format);
-  g("cn").value=S.team1.name||"";g("cs").value=S.team1.shortName||"";g("cc").value=S.team1.country||"";
-  g("tn").value=S.team2.name||"";g("ts").value=S.team2.shortName||"";g("tc").value=S.team2.country||"";
-  g("csc").textContent=S.team1.score||0;g("tsc").textContent=S.team2.score||0;
-  g("cnl").textContent=S.team1.name||"CT";g("tnl").textContent=S.team2.name||"T";
-  g("al").textContent=S.active?"⏸ O'chirish":"▶ Yoqish";
-  maps();
+// ── State ──────────────────────────────────────────────────
+let S = {
+  format: 'BO3', active: false,
+  team1: { name:'', logo:null },
+  team2: { name:'', logo:null },
+  maps: [],
+};
+
+// ── Socket ─────────────────────────────────────────────────
+const io2 = io({ transports:['websocket'] });
+io2.on('connect',    () => { g('cd').className='dot ok'; g('cst').textContent='Подключено'; });
+io2.on('disconnect', () => { g('cd').className='dot no'; g('cst').textContent='Отключено'; });
+io2.on('series',     d  => { S=d; syncUI(); });
+io2.on('gamestate',  gs => updateLive(gs));
+
+// ── Helpers ────────────────────────────────────────────────
+const g = id => document.getElementById(id);
+function showErr(msg) { g('err').textContent=msg; g('err').className='err-msg show'; g('ok').className='ok-msg'; }
+function showOk(msg)  { g('ok').textContent=msg;  g('ok').className='ok-msg show';  g('err').className='err-msg'; }
+function hideMsg()    { g('err').className='err-msg'; g('ok').className='ok-msg'; }
+function toast(msg, err=false) {
+  const el=document.createElement('div'); el.className='toast'+(err?' err':''); el.textContent=msg;
+  document.body.appendChild(el); setTimeout(()=>el.remove(),2200);
 }
 
-function maps(){
-  const tb=g("mb");tb.innerHTML="";
-  (S.maps||[]).forEach((m,i)=>{
-    const tr=document.createElement("tr");
-    const won=m.winner;
-    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td>
-      <td><b>${m.name||"?"}</b></td>
-      <td><input type="number" value="${m.team1Score||0}" min="0" max="30" style="width:56px;background:transparent;border:1px solid var(--border);border-radius:4px;color:#fff;padding:3px 6px;font-family:Rajdhani,sans-serif" onchange="S.maps[${i}].team1Score=+this.value"></td>
-      <td><input type="number" value="${m.team2Score||0}" min="0" max="30" style="width:56px;background:transparent;border:1px solid var(--border);border-radius:4px;color:#fff;padding:3px 6px;font-family:Rajdhani,sans-serif" onchange="S.maps[${i}].team2Score=+this.value"></td>
-      <td>
-        <button class="btn btn-ct" style="padding:3px 8px;font-size:11px" onclick="mw(${i},'team1')">CT${won==="team1"?" ✓":""}</button>
-        <button class="btn btn-t"  style="padding:3px 8px;font-size:11px;margin-left:4px" onclick="mw(${i},'team2')">T${won==="team2"?" ✓":""}</button>
-      </td>
-      <td><button class="btn btn-grey" style="padding:3px 8px;font-size:11px" onclick="rm(${i})">✕</button></td>`;
-    tb.appendChild(tr);
-  });
+// ── Format ─────────────────────────────────────────────────
+function setFmt(f) {
+  S.format = f;
+  const cnt = FORMAT[f].maps;
+  // Trim or pad maps array
+  while (S.maps.length < cnt) S.maps.push({name:null, winner:null});
+  S.maps = S.maps.slice(0, cnt);
+  // Sync UI
+  for (const b of document.querySelectorAll('.fmt-btn'))
+    b.classList.toggle('active', b.textContent===f);
+  g('fi').textContent = FORMAT[f].info;
+  renderSlots();
+  updateScore();
+  hideMsg();
 }
 
-function sf(f){S.format=f;for(const b of g("fr").querySelectorAll(".fmt-btn"))b.classList.toggle("active",b.textContent===f);}
-function am(){const n=g("nm").value.trim();if(!n)return;S.maps.push({name:n,team1Score:0,team2Score:0,winner:null});g("nm").value="";maps();}
-function rm(i){S.maps.splice(i,1);maps();}
-function mw(i,w){S.maps[i].winner=S.maps[i].winner===w?null:w;maps();}
-function aw(t){S[t].score++;ui();}
-function sw(t){S[t].score=Math.max(0,S[t].score-1);ui();}
-function col(){
-  S.team1.name=g("cn").value||"Team CT";S.team1.shortName=g("cs").value||"CT";S.team1.country=g("cc").value||"";
-  S.team2.name=g("tn").value||"Team T"; S.team2.shortName=g("ts").value||"T"; S.team2.country=g("tc").value||"";
+// ── Map slots ──────────────────────────────────────────────
+function renderSlots() {
+  const cnt   = FORMAT[S.format].maps;
+  const cont  = g('maps-slots');
+  const opts  = MAP_OPTS.map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
+
+  cont.innerHTML = Array.from({length:cnt}, (_,i) => {
+    const m   = S.maps[i] || {};
+    const cls = m.winner==='team1' ? 'slot-decided-ct' : m.winner==='team2' ? 'slot-decided-t' : m.name ? 'slot-filled' : 'slot-empty';
+    return `<div class="map-slot ${cls}" id="sl-${i}">
+      <span class="slot-num">Карта ${i+1}</span>
+      <select class="map-select" onchange="setMap(${i},this.value)">
+        <option value="">— Выбрать карту —</option>
+        ${opts}
+      </select>
+      <div class="winner-btns">
+        <button class="btn btn-ct btn-sm winner-btn ${m.winner==='team1'?'active-winner':''}"
+          onclick="setWinner(${i},'team1')">${m.winner==='team1'?'✓ ':''}CT победила</button>
+        <button class="btn btn-t btn-sm winner-btn ${m.winner==='team2'?'active-winner':''}"
+          onclick="setWinner(${i},'team2')">${m.winner==='team2'?'✓ ':''}T победила</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Set selected map values
+  for (let i=0; i<cnt; i++) {
+    const sel = cont.querySelectorAll('.map-select')[i];
+    if (sel && S.maps[i]?.name) sel.value = S.maps[i].name;
+  }
+
+  // Update counter info
+  const filled = S.maps.filter(m=>m.name).length;
+  g('map-count-info').textContent = `${filled} / ${cnt}`;
 }
-async function save(){col();const r=await fetch("/api/series",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(S)});if(r.ok)toast("✓ Yuborildi!");}
-async function rst(){if(!confirm("Reset?"))return;S.team1.score=0;S.team2.score=0;S.maps=[];S.active=false;await save();ui();}
-function tog(){S.active=!S.active;col();save();}
-function toast(m){const e=document.createElement("div");e.className="toast";e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2100);}
-function liveUpdate(gs){
-  if(!gs)return;
-  const map=gs.map||{},rnd=gs.round||{},ct=map.team_ct||{},t=map.team_t||{};
+
+function setMap(i, v) {
+  S.maps[i] = S.maps[i] || {};
+  S.maps[i].name = v || null;
+  renderSlots();
+  updateScore();
+  hideMsg();
+}
+
+function setWinner(i, w) {
+  S.maps[i] = S.maps[i] || {};
+  S.maps[i].winner = S.maps[i].winner === w ? null : w;
+  renderSlots();
+  updateScore();
+}
+
+// ── Score auto-calculation ─────────────────────────────────
+function updateScore() {
+  const ct = S.maps.filter(m=>m.winner==='team1').length;
+  const t  = S.maps.filter(m=>m.winner==='team2').length;
+  S.team1 = S.team1 || {};
+  S.team2 = S.team2 || {};
+  S.team1.score = ct;
+  S.team2.score = t;
+
+  g('sd-ct-score').textContent = ct;
+  g('sd-t-score').textContent  = t;
+  g('sd-ct').textContent = S.team1.name || 'CT';
+  g('sd-t').textContent  = S.team2.name || 'T';
+
+  const wins = FORMAT[S.format].wins;
+  let res = '';
+  if      (ct >= wins) res = `🏆 Победитель: ${S.team1.name||'CT'}`;
+  else if (t  >= wins) res = `🏆 Победитель: ${S.team2.name||'T'}`;
+  else if (ct>0||t>0)  res = 'Серия продолжается';
+  g('sd-result').textContent = res;
+}
+
+// ── Logo upload ────────────────────────────────────────────
+function uploadLogo(team, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.png')) {
+    toast('Разрешены только PNG файлы!', true); input.value=''; return;
+  }
+  if (file.size > 1024*1024) {
+    toast('Файл слишком большой (макс. 1 МБ)', true); input.value=''; return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = e.target.result;
+    if (team==='team1') {
+      S.team1.logo = data;
+      g('ct-logo-img').src = data; g('ct-logo-img').classList.remove('hidden');
+      g('ct-logo-ph').classList.add('hidden');
+      g('ct-logo-clr').classList.remove('hidden');
+    } else {
+      S.team2.logo = data;
+      g('t-logo-img').src = data; g('t-logo-img').classList.remove('hidden');
+      g('t-logo-ph').classList.add('hidden');
+      g('t-logo-clr').classList.remove('hidden');
+    }
+    toast('Логотип загружен ✓');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearLogo(team) {
+  if (team==='team1') {
+    S.team1.logo=null;
+    g('ct-logo-img').src=''; g('ct-logo-img').classList.add('hidden');
+    g('ct-logo-ph').classList.remove('hidden');
+    g('ct-logo-clr').classList.add('hidden');
+  } else {
+    S.team2.logo=null;
+    g('t-logo-img').src=''; g('t-logo-img').classList.add('hidden');
+    g('t-logo-ph').classList.remove('hidden');
+    g('t-logo-clr').classList.add('hidden');
+  }
+}
+
+// ── Validation ─────────────────────────────────────────────
+function validate() {
+  if (!S.team1.name.trim()) { showErr('Укажите название CT команды'); return false; }
+  if (!S.team2.name.trim()) { showErr('Укажите название T команды');  return false; }
+  const cnt = FORMAT[S.format].maps;
+  for (let i=0; i<cnt; i++) {
+    if (!S.maps[i]?.name) {
+      showErr(`Выберите карту для слота ${i+1}`);
+      return false;
+    }
+  }
+  return true;
+}
+
+// ── Save ───────────────────────────────────────────────────
+async function save() {
+  if (!validate()) return;
+  try {
+    const r = await fetch('/api/series', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(S),
+    });
+    if (r.ok) { showOk('✓ Данные сохранены и отправлены на HUD'); toast('Сохранено ✓'); }
+    else       { toast('Ошибка сервера', true); }
+  } catch(e) { toast('Ошибка соединения', true); }
+}
+
+// ── Toggle active ──────────────────────────────────────────
+async function toggle() {
+  S.active = !S.active;
+  g('act-lbl').textContent = S.active ? '⏸ Деактивировать' : '▶ Активировать серию';
+  await fetch('/api/series', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(S)});
+  toast(S.active ? 'Серия активна' : 'Серия деактивирована');
+}
+
+// ── Reset ──────────────────────────────────────────────────
+async function doReset() {
+  if (!confirm('Сбросить все данные серии?')) return;
+  S = { format:S.format, active:false, team1:{name:'',logo:null}, team2:{name:'',logo:null}, maps:[] };
+  setFmt(S.format);
+  syncUI();
+  await fetch('/api/series/reset', {method:'POST'});
+  toast('Сброс выполнен');
+}
+
+// ── Sync full UI from state ────────────────────────────────
+function syncUI() {
+  // Format
+  setFmt(S.format);
+  // Team names
+  g('ct-name').value = S.team1?.name || '';
+  g('t-name').value  = S.team2?.name || '';
+  // Logos
+  function applyLogo(logo, imgId, phId, clrId) {
+    if (logo) {
+      g(imgId).src=logo; g(imgId).classList.remove('hidden');
+      g(phId).classList.add('hidden');
+      g(clrId).classList.remove('hidden');
+    } else {
+      g(imgId).src=''; g(imgId).classList.add('hidden');
+      g(phId).classList.remove('hidden');
+      g(clrId).classList.add('hidden');
+    }
+  }
+  applyLogo(S.team1?.logo, 'ct-logo-img','ct-logo-ph','ct-logo-clr');
+  applyLogo(S.team2?.logo, 't-logo-img', 't-logo-ph', 't-logo-clr');
+  // Active label
+  g('act-lbl').textContent = S.active ? '⏸ Деактивировать' : '▶ Активировать серию';
+  // Maps and score
+  renderSlots();
+  updateScore();
+}
+
+// ── Live GSI state ─────────────────────────────────────────
+function updateLive(gs) {
+  if (!gs) return;
+  const map=gs.map||{}, rnd=gs.round||{};
+  const ct=map.team_ct||{}, t=map.team_t||{};
   const pl=Object.values(gs.allplayers||{});
-  const al={ct:pl.filter(p=>p.team==="CT"&&(p.state?.health??0)>0).length,t:pl.filter(p=>p.team==="T"&&(p.state?.health??0)>0).length};
+  const alive={ct:pl.filter(p=>p.team==='CT'&&(p.state?.health??0)>0).length,
+               t:pl.filter(p=>p.team==='T'&&(p.state?.health??0)>0).length};
   const bomb=gs.bomb;
-  const binfo=bomb&&bomb.state==="planted"?` | 💣 SITE ${bomb.site||"?"} ${parseFloat(bomb.countdown||0).toFixed(1)}s`:"";
-  g("lv").innerHTML=`<b>Xarita:</b> ${map.name||"—"} &nbsp; <b>Round:</b> ${(map.round??0)+1} &nbsp; <b>Holat:</b> ${rnd.phase||"—"}&nbsp;&nbsp; <span style="color:var(--ct)">CT ${ct.score??0}</span> : <span style="color:var(--t)">${t.score??0} T</span> &nbsp;&nbsp; Tirik: <span style="color:var(--ct)">${al.ct}</span>v<span style="color:var(--t)">${al.t}</span>${binfo}`;
+  const bstr=bomb?.state==='planted'
+    ?` &nbsp;💣 <b>Сайт ${bomb.site||'?'}</b> — ${parseFloat(bomb.countdown||0).toFixed(1)}с`:'';
+  const phase={freezetime:'Фаза покупки',live:'Раунд идёт',over:'Раунд завершён',warmup:'Разминка',intermission:'Перерыв (XL)',gameover:'Игра завершена'}[rnd.phase]||rnd.phase||'—';
+  g('lv').innerHTML=
+    `<b>Карта:</b> ${map.name||'—'} &nbsp; <b>Раунд:</b> ${(map.round??0)+1} &nbsp; <b>Фаза:</b> ${phase}<br>`+
+    `<span style="color:var(--ct)">CT ${ct.score??0}</span> : <span style="color:var(--t)">${t.score??0} T</span>`+
+    ` &nbsp;&nbsp; Живые: <span style="color:var(--ct)">${alive.ct}</span> vs <span style="color:var(--t)">${alive.t}</span>${bstr}`;
 }
-fetch("/api/series").then(r=>r.json()).then(s=>{S=s;ui();}).catch(()=>{});
+
+// ── Init ──────────────────────────────────────────────────
+fetch('/api/series').then(r=>r.json()).then(d=>{S=d;syncUI();}).catch(()=>syncUI());
 </script>
 </body>
 </html>

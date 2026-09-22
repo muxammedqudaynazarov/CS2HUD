@@ -41,14 +41,14 @@ const startedAt    = Date.now();
 // ─── Series state (BO1/BO3/BO5) ─────────────────────────────────
 let seriesState = {
   format: 'BO3',
-  team1: { name: 'Team CT', shortName: 'CT', score: 0, country: '' },
-  team2: { name: 'Team T',  shortName: 'T',  score: 0, country: '' },
-  maps:  [],    // [{name, team1Score, team2Score, winner: null|'team1'|'team2', picked_by, side_team1}]
+  team1: { name: 'Команда CT', logo: null },
+  team2: { name: 'Команда T',  logo: null },
+  maps:  [],    // [{name, winner: null|'team1'|'team2'}]
   active: false,
 };
 
 // ─── Middleware ──────────────────────────────────────────────────
-app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── Routes ─────────────────────────────────────────────────────
