@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CS2HUD — Setup</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  min-height:100vh;
+  background:#07091a;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+:root{
+  --ct:#5c8ff0;
+  --t:#e8a038;
+  --panel:rgba(10,13,28,0.97);
+  --border:rgba(255,255,255,0.09);
+  --dim:rgba(255,255,255,0.55);
+  --muted:rgba(255,255,255,0.30);
+  --green:#4ade80;
+  --red:#ef4444;
+}
+
+/* ── Layout ── */
+.page{
+  max-width:760px;
+  margin:0 auto;
+  padding:48px 24px 80px;
+}
+
+/* ── Header ── */
+.header{
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:48px;
+  padding-bottom:28px;
+  border-bottom:1px solid var(--border);
+}
+.logo{
+  font-size:28px;font-weight:900;letter-spacing:4px;
+  color:var(--ct);
+  text-shadow:0 0 28px rgba(92,143,240,.45);
+}
+.badge{
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  background:rgba(92,143,240,.15);
+  border:1px solid rgba(92,143,240,.3);
+  color:var(--ct);padding:4px 10px;border-radius:4px;
+}
+
+/* ── Status card ── */
+.status-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-top:2px solid var(--ct);
+  border-radius:10px;
+  padding:24px 28px;
+  margin-bottom:28px;
+}
+.status-title{
+  font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--dim);margin-bottom:16px;
+}
+.ip-row{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.ip-label{font-size:12px;color:var(--muted);letter-spacing:.5px}
+.ip-value{
+  font-size:22px;font-weight:800;letter-spacing:1px;
+  color:var(--ct);
+  font-variant-numeric:tabular-nums;
+}
+.port-suffix{font-size:16px;color:var(--dim);font-weight:600}
+
+.urls-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  margin-top:20px;
+}
+@media(max-width:500px){.urls-grid{grid-template-columns:1fr}}
+
+.url-item{
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:12px 14px;
+}
+.url-role{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.url-link{
+  font-size:12px;font-weight:600;
+  color:var(--ct);
+  word-break:break-all;
+  text-decoration:none;
+}
+.url-link:hover{text-decoration:underline}
+
+/* ── Steps ── */
+.section-title{
+  font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--dim);margin-bottom:16px;
+}
+
+.steps{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+
+.step{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:18px 20px;
+  display:flex;gap:16px;align-items:flex-start;
+}
+.step-num{
+  width:30px;height:30px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  background:rgba(92,143,240,.15);
+  border:1px solid rgba(92,143,240,.3);
+  font-size:13px;font-weight:800;color:var(--ct);
+}
+.step-body h3{font-size:14px;font-weight:700;margin-bottom:5px}
+.step-body p{font-size:13px;color:var(--dim);line-height:1.6}
+.step-body code{
+  display:inline-block;
+  background:rgba(255,255,255,.07);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:2px 7px;
+  font-size:12px;font-family:'SF Mono','Fira Code',monospace;
+  color:#c9d1d9;margin-top:6px;
+}
+
+/* ── Download button ── */
+.download-wrap{margin:24px 0}
+.btn-download{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,rgba(92,143,240,.2),rgba(92,143,240,.1));
+  border:1px solid rgba(92,143,240,.45);
+  color:var(--ct);
+  font-size:14px;font-weight:700;letter-spacing:.5px;
+  padding:13px 24px;border-radius:8px;
+  text-decoration:none;cursor:pointer;
+  transition:background .2s,box-shadow .2s;
+}
+.btn-download:hover{
+  background:linear-gradient(135deg,rgba(92,143,240,.3),rgba(92,143,240,.18));
+  box-shadow:0 0 20px rgba(92,143,240,.2);
+}
+.btn-icon{font-size:18px}
+
+/* ── Path code block ── */
+.path-block{
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-left:3px solid var(--ct);
+  border-radius:0 7px 7px 0;
+  padding:12px 16px;margin:8px 0;
+  font-family:'SF Mono','Fira Code',monospace;
+  font-size:12px;color:#c9d1d9;
+  word-break:break-all;line-height:1.5;
+}
+
+/* ── Connection test ── */
+.test-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-top:2px solid var(--t);
+  border-radius:10px;
+  padding:20px 24px;
+  margin-top:28px;
+}
+.test-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.test-title{font-size:14px;font-weight:700}
+.btn-test{
+  background:rgba(232,160,56,.15);
+  border:1px solid rgba(232,160,56,.35);
+  color:var(--t);
+  font-size:12px;font-weight:700;
+  padding:7px 16px;border-radius:6px;
+  cursor:pointer;transition:background .2s;
+}
+.btn-test:hover{background:rgba(232,160,56,.25)}
+
+.test-result{
+  font-size:13px;
+  padding:10px 14px;
+  border-radius:6px;
+  margin-top:10px;
+  display:none;
+}
+.test-result.ok  {background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:var(--green)}
+.test-result.fail{background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.25); color:var(--red)}
+
+.dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  margin-right:8px;
+}
+.dot.green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.dot.red  {background:var(--red);  box-shadow:0 0 6px var(--red)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">CS2HUD</div>
+    <div class="badge">SETUP</div>
+  </div>
+
+  <!-- Server status & IPs -->
+  <div class="status-card" id="statusCard">
+    <div class="status-title">Server ma'lumotlari</div>
+    <div class="ip-row">
+      <span class="ip-label">Asosiy IP :</span>
+      <span class="ip-value" id="serverIP">yuklanmoqda…</span>
+      <span class="port-suffix" id="serverPort"></span>
+    </div>
+    <div class="urls-grid" id="urlsGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- Step 1: Download GSI config -->
+  <div class="section-title">Gaming PC uchun sozlash</div>
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>GSI config faylini yuklab oling</h3>
+        <p>Quyidagi tugma serverning IP manzili bilan tayyor config faylni yaratib beradi.</p>
+        <div class="download-wrap">
+          <a class="btn-download" id="dlBtn" href="/gsi-config" download="gamestate_integration_cs2hud.cfg">
+            <span class="btn-icon">📥</span>
+            gamestate_integration_cs2hud.cfg yuklab olish
+          </a>
+        </div>
+        <p>Bu faylda GSI manzili <strong id="gsiUri">…</strong> ga sozlangan bo'ladi.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Faylni CS2 cfg papkasiga joylashtiring</h3>
+        <p>Yuklangan faylni quyidagi manzilga ko'chiring:</p>
+        <div class="path-block">
+          C:\Program Files (x86)\Steam\steamapps\common\<br>
+          Counter-Strike Global Offensive\game\csgo\cfg\
+        </div>
+        <p style="margin-top:8px">Yoki Steam → CS2 → Properties → Installed Files → Browse → <code>game/csgo/cfg/</code></p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>CS2'ni qayta ishga tushiring</h3>
+        <p>CS2 ochiq bo'lsa yoping va qayta oching. GSI config faqat yuklash vaqtida o'qiladi.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>OBS'ga Browser Source qo'shing</h3>
+        <p>Streaming PC'dagi OBS'da yangi Browser Source qo'shing:</p>
+        <code id="hudUrl">http://…/hud</code>
+        <p style="margin-top:8px">O'lcham: <strong>1920 × 1080</strong>, Custom CSS bo'sh qoldiring.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Connection test -->
+  <div class="test-card">
+    <div class="test-header">
+      <span class="test-title">🔌 Ulanishni tekshirish</span>
+      <button class="btn-test" onclick="testConnection()">Test qilish</button>
+    </div>
+    <p style="font-size:13px;color:var(--dim)">
+      CS2 ishga tushgandan so'ng, GSI server bilan muloqot qilayotganini tekshiring.
+    </p>
+    <div class="test-result" id="testResult"></div>
+  </div>
+
+</div><!-- /.page -->
+
+<script>
+// ── Load server network info ──────────────────────────────────────
+async function loadNetworkInfo() {
+  try {
+    const res  = await fetch('/api/network');
+    const data = await res.json();
+    const ip   = data.primary;
+    const port = data.port;
+
+    document.getElementById('serverIP').textContent   = ip;
+    document.getElementById('serverPort').textContent = `:${port}`;
+    document.getElementById('gsiUri').textContent     = `http://${ip}:${port}/gsi`;
+    document.getElementById('hudUrl').textContent     = `http://${ip}:${port}/hud`;
+
+    // Build URL grid
+    const urls = [
+      { role: '🎮  Gaming PC  →  GSI',  href: `http://${ip}:${port}/gsi`,   label: `${ip}:${port}/gsi`   },
+      { role: '📺  OBS  →  HUD overlay', href: `http://${ip}:${port}/hud`,   label: `${ip}:${port}/hud`   },
+      { role: '⚙️  Admin / Debug',       href: `http://${ip}:${port}/api/state`, label: `${ip}:${port}/api/state` },
+      { role: '💻  Localhost HUD',       href: `http://localhost:${port}/hud`, label: `localhost:${port}/hud` },
+    ];
+    const grid = document.getElementById('urlsGrid');
+    grid.innerHTML = urls.map(u => `
+      <div class="url-item">
+        <div class="url-role">${u.role}</div>
+        <a class="url-link" href="${u.href}" target="_blank">${u.label}</a>
+      </div>
+    `).join('');
+
+    // All IPs list
+    if (data.ips.length > 1) {
+      const extra = document.createElement('div');
+      extra.style.cssText = 'margin-top:14px;font-size:12px;color:var(--muted)';
+      extra.innerHTML = 'Barcha tarmoq interfeyslari: ' +
+        data.ips.map(i => `<strong style="color:var(--dim)">${i.ip}</strong> (${i.iface})`).join(' · ');
+      document.getElementById('statusCard').appendChild(extra);
+    }
+  } catch(e) {
+    document.getElementById('serverIP').textContent = 'aniqlab bo'lmadi';
+    document.getElementById('serverIP').style.color = 'var(--red)';
+  }
+}
+
+// ── Connection test ───────────────────────────────────────────────
+async function testConnection() {
+  const el = document.getElementById('testResult');
+  el.style.display = 'block';
+  el.className     = 'test-result';
+  el.innerHTML     = '⏳ Tekshirilmoqda…';
+
+  try {
+    const res   = await fetch('/api/state');
+    const state = await res.json();
+
+    const hasData = state && Object.keys(state).length > 0;
+
+    if (hasData) {
+      const map   = state.map?.name   || '—';
+      const phase = state.round?.phase || state.map?.phase || '—';
+      const ct    = state.map?.team_ct?.score ?? '?';
+      const t     = state.map?.team_t?.score  ?? '?';
+      el.className = 'test-result ok';
+      el.innerHTML = `
+        <span class="dot green"></span>
+        <strong>CS2 ulanganI GSI data olinmoqda!</strong><br>
+        <span style="margin-left:16px;font-size:12px;opacity:.8">
+          Map: <b>${map}</b> · Phase: <b>${phase}</b> · Score: CT ${ct} — T ${t}
+        </span>`;
+    } else {
+      el.className = 'test-result fail';
+      el.innerHTML = `
+        <span class="dot red"></span>
+        <strong>Server ishlaydi, lekin GSI data hali kelmadi.</strong><br>
+        <span style="margin-left:16px;font-size:12px;opacity:.8">
+          CS2 ishga tushganligini va cfg fayl to'g'ri joyda ekanligini tekshiring.
+        </span>`;
+    }
+  } catch(e) {
+    el.className = 'test-result fail';
+    el.innerHTML = `<span class="dot red"></span> <strong>Server bilan ulanib bo'lmadi.</strong> ${e.message}`;
+  }
+}
+
+loadNetworkInfo();
+</script>
+</body>
+</html>
