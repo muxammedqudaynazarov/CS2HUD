@@ -60,6 +60,9 @@ input[type=text]:focus{border-color:rgba(255,255,255,.25)}
 .map-slot.slot-filled{border-color:rgba(255,255,255,.1)}
 .map-slot.slot-decided-ct{border-left:3px solid var(--ct)}
 .map-slot.slot-decided-t {border-left:3px solid var(--t)}
+.map-slot.slot-locked{opacity:.42;pointer-events:none;background:rgba(255,255,255,.02)}
+.map-slot.slot-locked .map-select{cursor:not-allowed}
+.not-played-lbl{font-size:12px;color:var(--muted);font-style:italic;padding:0 6px;white-space:nowrap}
 .slot-num{font-size:11px;font-weight:700;color:var(--muted);min-width:52px;flex-shrink:0;letter-spacing:.5px}
 .map-select{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;outline:none;cursor:pointer;transition:border .2s}
 .map-select:focus{border-color:rgba(255,255,255,.25)}
@@ -203,8 +206,8 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
     </div>
     <div class="sd-sep">:</div>
     <div class="sd-team">
-      <div class="sd-score t" id="sd-t-score">0</div>
       <div class="sd-name" id="sd-t">T</div>
+      <div class="sd-score t" id="sd-t-score">0</div>
     </div>
   </div>
   <div class="sd-result" id="sd-result"></div>
@@ -292,36 +295,70 @@ function setFmt(f) {
 
 // ── Map slots ──────────────────────────────────────────────
 function renderSlots() {
-  const cnt   = FORMAT[S.format].maps;
-  const cont  = g('maps-slots');
-  const opts  = MAP_OPTS.map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
+  const cnt      = FORMAT[S.format].maps;
+  const winsNeed = FORMAT[S.format].wins;
+  const cont     = g('maps-slots');
+
+  // Pre-calculate running score to know when series is decided
+  let runCT = 0, runT = 0;
+  const decidedBefore = [];          // decidedBefore[i] = true → этот слот уже не играется
+  for (let i = 0; i < cnt; i++) {
+    decidedBefore[i] = runCT >= winsNeed || runT >= winsNeed;
+    const m = S.maps[i] || {};
+    if (!decidedBefore[i]) {         // считаем только сыгранные карты
+      if (m.winner === 'team1') runCT++;
+      if (m.winner === 'team2') runT++;
+    }
+  }
 
   cont.innerHTML = Array.from({length:cnt}, (_,i) => {
-    const m   = S.maps[i] || {};
-    const cls = m.winner==='team1' ? 'slot-decided-ct' : m.winner==='team2' ? 'slot-decided-t' : m.name ? 'slot-filled' : 'slot-empty';
+    const m = S.maps[i] || {};
+
+    // ── Уникальные карты: убираем уже выбранные в других слотах ──
+    const usedElsewhere = new Set(
+      S.maps.filter((_,j) => j !== i && _.name).map(x => x.name)
+    );
+    const availOpts = MAP_OPTS
+      .filter(o => !usedElsewhere.has(o.v))
+      .map(o => `<option value="${o.v}">${o.l}</option>`)
+      .join('');
+
+    // ── Класс строки ──
+    const locked = decidedBefore[i];
+    const sideCls = m.winner==='team1' ? 'slot-decided-ct'
+                  : m.winner==='team2' ? 'slot-decided-t'
+                  : m.name             ? 'slot-filled'
+                                       : 'slot-empty';
+    const cls = `${sideCls}${locked ? ' slot-locked' : ''}`;
+
+    // ── Кнопки победителя ──
+    const winnerBtns = locked
+      ? `<span class="not-played-lbl">Не сыгран</span>`
+      : `<div class="winner-btns">
+           <button class="btn btn-ct btn-sm winner-btn ${m.winner==='team1'?'active-winner':''}"
+             onclick="setWinner(${i},'team1')">${m.winner==='team1'?'✓ ':''}CT победила</button>
+           <button class="btn btn-t btn-sm winner-btn ${m.winner==='team2'?'active-winner':''}"
+             onclick="setWinner(${i},'team2')">${m.winner==='team2'?'✓ ':''}T победила</button>
+         </div>`;
+
     return `<div class="map-slot ${cls}" id="sl-${i}">
       <span class="slot-num">Карта ${i+1}</span>
-      <select class="map-select" onchange="setMap(${i},this.value)">
+      <select class="map-select" onchange="setMap(${i},this.value)"${locked?' disabled':''}>
         <option value="">— Выбрать карту —</option>
-        ${opts}
+        ${availOpts}
       </select>
-      <div class="winner-btns">
-        <button class="btn btn-ct btn-sm winner-btn ${m.winner==='team1'?'active-winner':''}"
-          onclick="setWinner(${i},'team1')">${m.winner==='team1'?'✓ ':''}CT победила</button>
-        <button class="btn btn-t btn-sm winner-btn ${m.winner==='team2'?'active-winner':''}"
-          onclick="setWinner(${i},'team2')">${m.winner==='team2'?'✓ ':''}T победила</button>
-      </div>
+      ${winnerBtns}
     </div>`;
   }).join('');
 
-  // Set selected map values
-  for (let i=0; i<cnt; i++) {
-    const sel = cont.querySelectorAll('.map-select')[i];
-    if (sel && S.maps[i]?.name) sel.value = S.maps[i].name;
+  // Восстанавливаем выбранные значения dropdown
+  const sels = cont.querySelectorAll('.map-select');
+  for (let i = 0; i < cnt; i++) {
+    if (sels[i] && S.maps[i]?.name) sels[i].value = S.maps[i].name;
   }
 
-  // Update counter info
-  const filled = S.maps.filter(m=>m.name).length;
+  // Счётчик заполненных слотов
+  const filled = S.maps.filter(m => m.name).length;
   g('map-count-info').textContent = `${filled} / ${cnt}`;
 }
 
@@ -342,8 +379,15 @@ function setWinner(i, w) {
 
 // ── Score auto-calculation ─────────────────────────────────
 function updateScore() {
-  const ct = S.maps.filter(m=>m.winner==='team1').length;
-  const t  = S.maps.filter(m=>m.winner==='team2').length;
+  // Считаем только сыгранные карты (до первого решающего результата)
+  const winsNeed = FORMAT[S.format].wins;
+  let ct = 0, t = 0;
+  for (const m of S.maps) {
+    if (ct >= winsNeed || t >= winsNeed) break;  // серия уже решена — стоп
+    if (m.winner === 'team1') ct++;
+    if (m.winner === 'team2') t++;
+  }
+
   S.team1 = S.team1 || {};
   S.team2 = S.team2 || {};
   S.team1.score = ct;
@@ -354,11 +398,10 @@ function updateScore() {
   g('sd-ct').textContent = S.team1.name || 'CT';
   g('sd-t').textContent  = S.team2.name || 'T';
 
-  const wins = FORMAT[S.format].wins;
   let res = '';
-  if      (ct >= wins) res = `🏆 Победитель: ${S.team1.name||'CT'}`;
-  else if (t  >= wins) res = `🏆 Победитель: ${S.team2.name||'T'}`;
-  else if (ct>0||t>0)  res = 'Серия продолжается';
+  if      (ct >= winsNeed) res = `🏆 Победитель: ${S.team1.name || 'CT'}`;
+  else if (t  >= winsNeed) res = `🏆 Победитель: ${S.team2.name || 'T'}`;
+  else if (ct > 0 || t > 0) res = 'Серия продолжается...';
   g('sd-result').textContent = res;
 }
 
