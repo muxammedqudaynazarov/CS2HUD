@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CS2HUD Control Panel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:#06071a;color:#e2e8f0;font-family:'Rajdhani',sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
+:root{--ct:#4d88ff;--t:#ff4444;--g:#4ade80;--y:#fbbf24;--panel:rgba(10,12,28,.98);--border:rgba(255,255,255,.09);--dim:rgba(255,255,255,.55);--muted:rgba(255,255,255,.30)}
+.page{max-width:900px;margin:0 auto;padding:32px 20px 80px}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:28px}
+.logo{font-size:22px;font-weight:700;letter-spacing:3px;color:var(--ct)}
+.badge{font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 8px;background:rgba(77,136,255,.15);border:1px solid rgba(77,136,255,.3);color:var(--ct);border-radius:3px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot.ok{background:var(--g);box-shadow:0 0 6px var(--g)}.dot.no{background:var(--t)}
+.section{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px}
+.sec-t{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.fmt-row{display:flex;gap:8px}
+.fmt-btn{flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--dim);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.fmt-btn.active{background:rgba(77,136,255,.18);border-color:var(--ct);color:var(--ct)}
+.fmt-btn:hover:not(.active){background:rgba(255,255,255,.05)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.col-label{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.col-label.ct{color:var(--ct)}.col-label.t{color:var(--t)}
+input[type=text],input[type=number]{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:#fff;font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;margin-bottom:6px;transition:border .2s}
+input:focus{border-color:rgba(255,255,255,.25)}
+.score-row{display:flex;align-items:center;gap:16px;margin-top:10px}
+.sc{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
+.sn{font-size:52px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.sc:first-child .sn{color:var(--ct)}.sc:last-child .sn{color:var(--t)}
+.sep{font-size:28px;color:var(--muted)}
+.sc-btns{display:flex;gap:6px}
+.btn{padding:8px 18px;border-radius:6px;border:1px solid;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.btn-ct{background:rgba(77,136,255,.15);border-color:rgba(77,136,255,.4);color:var(--ct)}.btn-ct:hover{background:rgba(77,136,255,.28)}
+.btn-t{background:rgba(255,68,68,.15);border-color:rgba(255,68,68,.4);color:var(--t)}.btn-t:hover{background:rgba(255,68,68,.28)}
+.btn-g{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:var(--g)}.btn-g:hover{background:rgba(74,222,128,.28)}
+.btn-grey{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:var(--dim)}.btn-grey:hover{background:rgba(255,255,255,.14)}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.map-add{display:flex;gap:8px;margin-top:10px}
+.map-add input{flex:1;margin:0}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.live{background:rgba(5,6,14,.98);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--dim);margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.8}
+.toast{position:fixed;bottom:20px;right:20px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.35);color:var(--g);border-radius:6px;padding:10px 18px;font-size:13px;font-weight:700;z-index:999;animation:tIn .3s ease,tOut .3s ease 1.7s forwards}
+@keyframes tIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes tOut{from{opacity:1}to{opacity:0}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="hdr">
+  <div class="logo">CS2HUD</div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span><span class="dot no" id="cd"></span><span id="ct" style="font-size:12px;color:var(--muted)">Ulanmoqda...</span></span>
+    <div class="badge">CONTROL PANEL</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-t">Series format</div>
+  <div class="fmt-row" id="fr">
+    <button class="fmt-btn" onclick="sf('BO1')">BO1</button>
+    <button class="fmt-btn active" onclick="sf('BO3')">BO3</button>
+    <button class="fmt-btn" onclick="sf('BO5')">BO5</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-t">Jamoalar</div>
+  <div class="grid2">
+    <div>
+      <div class="col-label ct">CT Jamoasi</div>
+      <input id="cn" type="text" placeholder="Jamoa nomi" value="Team CT">
+      <input id="cs" type="text" placeholder="Qisqa (CT)" value="CT">
+      <input id="cc" type="text" placeholder="Davlat (uz)" maxlength="2">
+    </div>
+    <div>
+      <div class="col-label t">T Jamoasi</div>
+      <input id="tn" type="text" placeholder="Jamoa nomi" value="Team T">
+      <input id="ts" type="text" placeholder="Qisqa (T)" value="T">
+      <input id="tc" type="text" placeholder="Davlat (ru)" maxlength="2">
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-t">Seriya hisobi</div>
+  <div class="score-row">
+    <div class="sc">
+      <span id="cnl" style="font-size:13px;color:var(--ct);font-weight:700">CT Jamoasi</span>
+      <span class="sn" id="csc">0</span>
+      <div class="sc-btns">
+        <button class="btn btn-ct" onclick="aw('team1')">+ G'alaba</button>
+        <button class="btn btn-grey" onclick="sw('team1')">−</button>
+      </div>
+    </div>
+    <div class="sep">:</div>
+    <div class="sc">
+      <span id="tnl" style="font-size:13px;color:var(--t);font-weight:700">T Jamoasi</span>
+      <span class="sn" id="tsc">0</span>
+      <div class="sc-btns">
+        <button class="btn btn-grey" onclick="sw('team2')">−</button>
+        <button class="btn btn-t" onclick="aw('team2')">+ G'alaba</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-t">Xaritalar (Veto)</div>
+  <table><thead><tr><th>#</th><th>Xarita</th><th>CT</th><th>T</th><th>G'olib</th><th></th></tr></thead>
+  <tbody id="mb"></tbody></table>
+  <div class="map-add">
+    <input type="text" id="nm" placeholder="de_mirage">
+    <button class="btn btn-ct" onclick="am()">+ Qo'shish</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-t">Joriy o'yin holati (GSI)</div>
+  <div class="live" id="lv">Ma'lumot kutilmoqda...</div>
+</div>
+
+<div class="acts">
+  <button class="btn btn-g"    onclick="save()">💾 Saqlash</button>
+  <button class="btn btn-grey" onclick="tog()"><span id="al">▶ Seriyani yoqish</span></button>
+  <button class="btn btn-grey" onclick="rst()">🔄 Reset</button>
+  <a href="/hud"    target="_blank" class="btn btn-grey">📺 HUD</a>
+  <a href="/setup"  target="_blank" class="btn btn-grey">⚙ Setup</a>
+</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const io2=io({transports:["websocket"]});
+const g=id=>document.getElementById(id);
+let S={format:"BO3",active:false,team1:{name:"Team CT",shortName:"CT",score:0,country:""},team2:{name:"Team T",shortName:"T",score:0,country:""},maps:[]};
+
+io2.on("connect",()=>{g("cd").className="dot ok";g("ct").textContent="Ulangan"});
+io2.on("disconnect",()=>{g("cd").className="dot no";g("ct").textContent="Uzildi"});
+io2.on("series",s=>{S=s;ui()});
+io2.on("gamestate",gs=>liveUpdate(gs));
+
+function ui(){
+  for(const b of g("fr").querySelectorAll(".fmt-btn"))b.classList.toggle("active",b.textContent===S.format);
+  g("cn").value=S.team1.name||"";g("cs").value=S.team1.shortName||"";g("cc").value=S.team1.country||"";
+  g("tn").value=S.team2.name||"";g("ts").value=S.team2.shortName||"";g("tc").value=S.team2.country||"";
+  g("csc").textContent=S.team1.score||0;g("tsc").textContent=S.team2.score||0;
+  g("cnl").textContent=S.team1.name||"CT";g("tnl").textContent=S.team2.name||"T";
+  g("al").textContent=S.active?"⏸ O'chirish":"▶ Yoqish";
+  maps();
+}
+
+function maps(){
+  const tb=g("mb");tb.innerHTML="";
+  (S.maps||[]).forEach((m,i)=>{
+    const tr=document.createElement("tr");
+    const won=m.winner;
+    tr.innerHTML=`<td style="color:var(--muted)">${i+1}</td>
+      <td><b>${m.name||"?"}</b></td>
+      <td><input type="number" value="${m.team1Score||0}" min="0" max="30" style="width:56px;background:transparent;border:1px solid var(--border);border-radius:4px;color:#fff;padding:3px 6px;font-family:Rajdhani,sans-serif" onchange="S.maps[${i}].team1Score=+this.value"></td>
+      <td><input type="number" value="${m.team2Score||0}" min="0" max="30" style="width:56px;background:transparent;border:1px solid var(--border);border-radius:4px;color:#fff;padding:3px 6px;font-family:Rajdhani,sans-serif" onchange="S.maps[${i}].team2Score=+this.value"></td>
+      <td>
+        <button class="btn btn-ct" style="padding:3px 8px;font-size:11px" onclick="mw(${i},'team1')">CT${won==="team1"?" ✓":""}</button>
+        <button class="btn btn-t"  style="padding:3px 8px;font-size:11px;margin-left:4px" onclick="mw(${i},'team2')">T${won==="team2"?" ✓":""}</button>
+      </td>
+      <td><button class="btn btn-grey" style="padding:3px 8px;font-size:11px" onclick="rm(${i})">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function sf(f){S.format=f;for(const b of g("fr").querySelectorAll(".fmt-btn"))b.classList.toggle("active",b.textContent===f);}
+function am(){const n=g("nm").value.trim();if(!n)return;S.maps.push({name:n,team1Score:0,team2Score:0,winner:null});g("nm").value="";maps();}
+function rm(i){S.maps.splice(i,1);maps();}
+function mw(i,w){S.maps[i].winner=S.maps[i].winner===w?null:w;maps();}
+function aw(t){S[t].score++;ui();}
+function sw(t){S[t].score=Math.max(0,S[t].score-1);ui();}
+function col(){
+  S.team1.name=g("cn").value||"Team CT";S.team1.shortName=g("cs").value||"CT";S.team1.country=g("cc").value||"";
+  S.team2.name=g("tn").value||"Team T"; S.team2.shortName=g("ts").value||"T"; S.team2.country=g("tc").value||"";
+}
+async function save(){col();const r=await fetch("/api/series",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(S)});if(r.ok)toast("✓ Yuborildi!");}
+async function rst(){if(!confirm("Reset?"))return;S.team1.score=0;S.team2.score=0;S.maps=[];S.active=false;await save();ui();}
+function tog(){S.active=!S.active;col();save();}
+function toast(m){const e=document.createElement("div");e.className="toast";e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2100);}
+function liveUpdate(gs){
+  if(!gs)return;
+  const map=gs.map||{},rnd=gs.round||{},ct=map.team_ct||{},t=map.team_t||{};
+  const pl=Object.values(gs.allplayers||{});
+  const al={ct:pl.filter(p=>p.team==="CT"&&(p.state?.health??0)>0).length,t:pl.filter(p=>p.team==="T"&&(p.state?.health??0)>0).length};
+  const bomb=gs.bomb;
+  const binfo=bomb&&bomb.state==="planted"?` | 💣 SITE ${bomb.site||"?"} ${parseFloat(bomb.countdown||0).toFixed(1)}s`:"";
+  g("lv").innerHTML=`<b>Xarita:</b> ${map.name||"—"} &nbsp; <b>Round:</b> ${(map.round??0)+1} &nbsp; <b>Holat:</b> ${rnd.phase||"—"}&nbsp;&nbsp; <span style="color:var(--ct)">CT ${ct.score??0}</span> : <span style="color:var(--t)">${t.score??0} T</span> &nbsp;&nbsp; Tirik: <span style="color:var(--ct)">${al.ct}</span>v<span style="color:var(--t)">${al.t}</span>${binfo}`;
+}
+fetch("/api/series").then(r=>r.json()).then(s=>{S=s;ui();}).catch(()=>{});
+</script>
+</body>
+</html>
