@@ -268,12 +268,6 @@ fetch('/api/tournament').then(r=>r.json()).then(d => {
   if (el) el.value = tname;
 }).catch(()=>{});
 
-// Also listen for tournament updates
-io2.on('tournament', d => {
-  const el = document.getElementById('tname');
-  if (el && d.name) { el.value = d.name; tname = d.name; }
-});
-
 // ── Constants ──────────────────────────────────────────────
 const FORMAT = {
   BO1: { maps:1, wins:1, info:'1 карта · победа с первой карты' },
@@ -308,6 +302,11 @@ io2.on('connect',    () => { g('cd').className='dot ok'; g('cst').textContent='�
 io2.on('disconnect', () => { g('cd').className='dot no'; g('cst').textContent='Отключено'; });
 io2.on('series',     d  => { S=d; syncUI(); });
 io2.on('gamestate',  gs => updateLive(gs));
+io2.on('tournament', d  => {
+  tname = d.name || tname;
+  const el = document.getElementById('tname');
+  if (el && d.name) el.value = d.name;
+});
 
 // ── Helpers ────────────────────────────────────────────────
 const g = id => document.getElementById(id);
